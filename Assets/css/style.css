@@ -1,0 +1,47 @@
+/* Import font Inter dari Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* Atur font default untuk seluruh halaman */
+body {
+    font-family: 'Inter', sans-serif !important;
+    background-color: #f8f9fa; /* Warna abu-abu sangat terang */
+}
+
+.navbar {
+    padding: 15px 10px;
+}
+
+.navbar-brand {
+    font-weight: bold;
+    color: #333 !important;
+}
+
+.nav-link {
+    margin: 0 15px;
+}
+
+.nav-link:hover {
+    color: #007bff !important;
+}
+
+.bg-white {
+    background-color: #ffffff !important; /* Warna putih bersih */
+}
+
+.rounded-10 {
+    border-radius: 10px !important;
+}
+
+.shadow-sm {
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    font-size: 2.5rem;
+    color: #333;
+}
+
+p {
+    font-size: 1.1rem;
+    color: #555;
+}

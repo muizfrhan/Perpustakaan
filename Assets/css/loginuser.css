@@ -1,0 +1,97 @@
+:root {
+    --primary: #7371fc;
+    --background-light: rgba(255, 255, 255, 0.95);
+    --text-color: #333;
+    --yellow: #ffc107;
+    --primary-light: #6610f2;
+    --primary-light-1: #a594f9;
+    --primary-light-2: #cdc1ff;
+    --primary-light-3: #e5d9f2;
+    --primary-light-4: #f5efff;
+  }
+
+  body {
+    background-color: #f8f9fa;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+  }
+
+  .login-container {
+    max-width: 500px;
+    width: 90%; /* Responsif untuk layar kecil */
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .login-logo {
+    display: flex;
+    justify-content: center; /* Pusatkan secara horizontal */
+    align-items: center; /* Pusatkan secara vertikal (jika elemen memiliki tinggi) */
+    width: 100%; /* Pastikan lebar penuh */
+  }
+
+  .login-logo img {
+    height: 80px; /* Ukuran logo responsif */
+    margin-bottom: 20px;
+  }
+
+  .login-header {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+
+  .login-subtitle {
+    font-size: 14px;
+    color: #6c757d;
+    margin-bottom: 20px;
+  }
+
+  .form-label {
+    font-weight: bold;
+    color: #555;
+  }
+
+  .btn-primary {
+    background-color: var(--primary);
+    font-weight: bold;
+  }
+
+  .btn-primary:hover {
+    background-color: var(--primary-light);
+  }
+
+  .forgot-password,
+  .signup-link {
+    font-size: 14px;
+  }
+
+  .forgot-password {
+    text-align: right;
+    display: block;
+    margin-bottom: 10px;
+    color: #007bff;
+  }
+
+  .signup-link {
+    color: #007bff;
+  }
+
+  @media (max-width: 576px) {
+    .login-container {
+      padding: 15px;
+    }
+
+    .login-header {
+      font-size: 20px;
+    }
+
+    .login-logo img {
+      height: 70px;
+    }
+  }

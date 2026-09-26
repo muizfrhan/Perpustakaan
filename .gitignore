@@ -1,0 +1,18 @@
+# Logs
+*.log
+error_log
+
+# OS / editor
+Thumbs.db
+.DS_Store
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.bak
+*~
+
+# Local environment overrides
+Config/koneksi.local.php
+.env
