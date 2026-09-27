@@ -50,7 +50,11 @@ if (isset($_GET['kode_kembali'])) {
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Struk Pengembalian Buku</title>
+      <title>Struk Pengembalian Buku - PUSAKU</title>
+      <!-- Favicon PUSAKU -->
+      <link rel="icon" type="image/svg+xml" href="../../Assets/logo/favicon.svg" />
+      <link rel="icon" type="image/png" sizes="32x32" href="../../Assets/logo/favicon-32.png" />
+      <link rel="icon" type="image/png" sizes="16x16" href="../../Assets/logo/favicon-16.png" />
       <style>
         body {
           font-family: 'Arial', sans-serif;
@@ -129,8 +133,8 @@ if (isset($_GET['kode_kembali'])) {
     <body onload="window.print()">
       <div class="struk">
         <div class="header">
-          <!-- Logo Perpustakaan -->
-          <img src="../../Assets/img/logo2.svg" alt="Logo Perpustakaan">
+          <!-- Logo PUSAKU -->
+          <img src="../../Assets/logo/pusaku-icon.svg" alt="PUSAKU">
           <h1>Perpustakaan Pusaku</h1>
           <p>Jl. Tasyuka No. 12, Kota Surakarta</p>
         </div>

@@ -1,7 +1,18 @@
 <?php
+/**
+ * Form Edit Peminjaman (fragment AJAX).
+ *
+ * Dimuat ke dalam #editModalContent oleh peminjaman.php.
+ * Nama field TIDAK BERUBAH agar tetap kompatibel dengan query UPDATE di bawah.
+ */
 session_start(); // Memastikan sesi dimulai
 
-require_once '../../Config/koneksi.php'; // Menghubungkan ke file koneksi database
+require_once __DIR__ . '/../../Config/bootstrap.php';
+require_once __DIR__ . '/../../Config/koneksi.php'; // Menghubungkan ke file koneksi database
+
+// Wajib login: halaman ini memuat/mengubah data perpustakaan.
+require_admin();
+
 
 // Proses pengambilan data untuk edit
 // Proses pengambilan data untuk edit
@@ -23,7 +34,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['kode_pinjam'])) {
 
   // Jika data tidak ditemukan
   if (!$data) {
-      echo '<p class="text-danger">Data peminjaman tidak ditemukan!</p>';
+      flash('danger', 'Data peminjaman tidak ditemukan!');
+      header('Location: peminjaman.php');
       exit;
   }
 
@@ -44,104 +56,117 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $kondisi_buku_pinjam = $_POST['kondisi_buku_pinjam'];
 
   if (empty($nim) || empty($kode_buku) || empty($id_petugas) || empty($estimasi_pinjam) || empty($kondisi_buku_pinjam)) {
-      echo '<script>alert("Semua bidang wajib diisi!");</script>';
-  } else {
-      $sql = "
-          UPDATE peminjaman
-          SET nim = :nim, 
-              kode_buku = :kode_buku, 
-              id_petugas = :id_petugas, 
-              estimasi_pinjam = :estimasi_pinjam, 
-              kondisi_buku_pinjam = :kondisi_buku_pinjam
-          WHERE kode_pinjam = :kode_pinjam
-      ";
-
-      $stmt = $conn->prepare($sql);
-      $stmt->bindValue(':nim', $nim);
-      $stmt->bindValue(':kode_buku', $kode_buku);
-      $stmt->bindValue(':id_petugas', $id_petugas);
-      $stmt->bindValue(':estimasi_pinjam', $estimasi_pinjam);
-      $stmt->bindValue(':kondisi_buku_pinjam', $kondisi_buku_pinjam);
-      $stmt->bindValue(':kode_pinjam', $kode_pinjam, PDO::PARAM_STR);
-
-      if ($stmt->execute()) {
-          echo '<script>alert("Data peminjaman berhasil diperbarui!"); window.location.href = "peminjaman.php";</script>';
-      } else {
-          echo '<script>alert("Gagal memperbarui data peminjaman. Silakan coba lagi.");</script>';
-      }
+      flash('danger', 'Semua bidang wajib diisi!');
+      header('Location: peminjaman.php');
+      exit;
   }
+
+  $sql = "
+      UPDATE peminjaman
+      SET nim = :nim, 
+          kode_buku = :kode_buku, 
+          id_petugas = :id_petugas, 
+          estimasi_pinjam = :estimasi_pinjam, 
+          kondisi_buku_pinjam = :kondisi_buku_pinjam
+      WHERE kode_pinjam = :kode_pinjam
+  ";
+
+  $stmt = $conn->prepare($sql);
+  $stmt->bindValue(':nim', $nim);
+  $stmt->bindValue(':kode_buku', $kode_buku);
+  $stmt->bindValue(':id_petugas', $id_petugas);
+  $stmt->bindValue(':estimasi_pinjam', $estimasi_pinjam);
+  $stmt->bindValue(':kondisi_buku_pinjam', $kondisi_buku_pinjam);
+  $stmt->bindValue(':kode_pinjam', $kode_pinjam, PDO::PARAM_STR);
+
+  try {
+      if ($stmt->execute()) {
+          flash('success', 'Data peminjaman berhasil diperbarui!');
+      } else {
+          flash('danger', 'Gagal memperbarui data peminjaman. Silakan coba lagi.');
+      }
+  } catch (PDOException $e) {
+      flash('danger', 'Gagal memperbarui data peminjaman: ' . $e->getMessage());
+  }
+
+  header('Location: peminjaman.php');
+  exit;
 }
 
+$e = static fn($v) => htmlspecialchars((string) $v);
 ?>
 
-<div class="container">
-  <form action="edit_peminjaman.php" method="POST">
-    <input type="hidden" name="kode_pinjam" value="<?= $data['kode_pinjam']; ?>">
-    
-    <div class="row">
-      <div class="col-md-6">
-        <div class="mb-3">
-          <label for="nim" class="form-label">Anggota</label>
-          <select name="nim" id="nim" class="form-select" required>
-            <option value="">Pilih Anggota</option>
-            <?php foreach ($anggota as $a): ?>
-              <option value="<?= $a['nim']; ?>" <?= $a['nim'] === $data['nim'] ? 'selected' : ''; ?>>
-                <?= $a['nim']; ?> - <?= $a['nama']; ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
-        </div>
-      </div>
-      <div class="col-md-6">
-        <div class="mb-3">
-          <label for="kode_buku" class="form-label">Buku</label>
-          <select name="kode_buku" id="kode_buku" class="form-select" required>
-            <option value="">Pilih Buku</option>
-            <?php foreach ($buku as $b): ?>
-              <option value="<?= $b['kode_buku']; ?>" <?= $b['kode_buku'] === $data['kode_buku'] ? 'selected' : ''; ?>>
-                <?= $b['kode_buku']; ?> - <?= $b['judul_buku']; ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
-        </div>
-      </div>
-    </div>
-    
-    <div class="row">
-      <div class="col-md-6">
-        <div class="mb-3">
-        <label for="id_petugas" class="form-label">Petugas</label>
-      <select name="id_petugas" id="id_petugas" class="form-select" required>
-        <option value="">Pilih Petugas</option>
-        <?php foreach ($petugas as $p): ?>
-          <option value="<?= $p['id_petugas']; ?>" <?= $p['id_petugas'] === $data['id_petugas'] ? 'selected' : ''; ?>>
-            <?= $p['nama_petugas']; ?>
+<form action="edit_peminjaman.php" method="POST" class="space-y-5" novalidate>
+  <input type="hidden" name="kode_pinjam" value="<?= $e($data['kode_pinjam']); ?>" />
+
+  <div class="grid gap-4 sm:grid-cols-2">
+
+    <div>
+      <label for="nim" class="field-label">Anggota <span class="text-rose-500">*</span></label>
+      <select name="nim" id="nim" class="field-select" data-autofocus required>
+        <option value="" disabled selected>Pilih Anggota</option>
+        <?php foreach ($anggota as $a): ?>
+          <option value="<?= $e($a['nim']); ?>" <?= $a['nim'] === $data['nim'] ? 'selected' : ''; ?>>
+            <?= $e($a['nim']); ?> &ndash; <?= $e($a['nama']); ?>
           </option>
         <?php endforeach; ?>
       </select>
-        </div>
-      </div>
-      <div class="col-md-6">
-        <div class="mb-3">
-          <label for="estimasi_pinjam" class="form-label">Estimasi Pinjam</label>
-          <input type="datetime-local" name="estimasi_pinjam" id="estimasi_pinjam" 
-                 class="form-control" value="<?= date('Y-m-d\TH:i', strtotime($data['estimasi_pinjam'])); ?>" required>
-        </div>
-      </div>
     </div>
-    
-    <div class="row">
-        <div class="mb-3">
-          <label for="kondisi_buku_pinjam" class="form-label">Kondisi Buku</label>
-          <select name="kondisi_buku_pinjam" id="kondisi_buku_pinjam" class="form-select" required>
-            <option value="bagus" <?= $data['kondisi_buku_pinjam'] === 'bagus' ? 'selected' : ''; ?>>Bagus</option>
-            <option value="rusak" <?= $data['kondisi_buku_pinjam'] === 'rusak' ? 'selected' : ''; ?>>Rusak</option>
-          </select>
-        </div>
+
+    <div>
+      <label for="kode_buku" class="field-label">Buku <span class="text-rose-500">*</span></label>
+      <select name="kode_buku" id="kode_buku" class="field-select" required>
+        <option value="" disabled selected>Pilih Buku</option>
+        <?php foreach ($buku as $b): ?>
+          <option value="<?= $e($b['kode_buku']); ?>" <?= $b['kode_buku'] === $data['kode_buku'] ? 'selected' : ''; ?>>
+            <?= $e($b['kode_buku']); ?> &ndash; <?= $e($b['judul_buku']); ?>
+          </option>
+        <?php endforeach; ?>
+      </select>
     </div>
-    
-    <div class="d-flex justify-content-end mt-4">
-      <button type="submit" class="btn btn-warning">Simpan Perubahan</button>
+
+    <div>
+      <label for="id_petugas" class="field-label">Petugas <span class="text-rose-500">*</span></label>
+      <select name="id_petugas" id="id_petugas" class="field-select" required>
+        <option value="" disabled selected>Pilih Petugas</option>
+        <?php foreach ($petugas as $p): ?>
+          <option value="<?= $e($p['id_petugas']); ?>" <?= $p['id_petugas'] === $data['id_petugas'] ? 'selected' : ''; ?>>
+            <?= $e($p['nama_petugas']); ?>
+          </option>
+        <?php endforeach; ?>
+      </select>
     </div>
-  </form>
-</div>
+
+    <div>
+      <label for="estimasi_pinjam" class="field-label">Estimasi Pinjam <span class="text-rose-500">*</span></label>
+      <input type="datetime-local" name="estimasi_pinjam" id="estimasi_pinjam" class="field"
+             value="<?= date('Y-m-d\TH:i', strtotime($data['estimasi_pinjam'])); ?>" required />
+    </div>
+
+    <div>
+      <label for="kondisi_buku_pinjam" class="field-label">Kondisi Buku <span class="text-rose-500">*</span></label>
+      <select name="kondisi_buku_pinjam" id="kondisi_buku_pinjam" class="field-select" required>
+        <option value="bagus" <?= $data['kondisi_buku_pinjam'] === 'bagus' ? 'selected' : ''; ?>>Bagus</option>
+        <option value="rusak" <?= $data['kondisi_buku_pinjam'] === 'rusak' ? 'selected' : ''; ?>>Rusak</option>
+      </select>
+    </div>
+
+    <div>
+      <span class="field-label">Tanggal Pinjam</span>
+      <p class="field mt-0 cursor-not-allowed bg-slate-50 text-slate-500">
+        <?= date('d/m/Y H:i', strtotime($data['tgl_pinjam'])) ?>
+      </p>
+      <p class="field-hint">Tanggal pinjam tidak dapat diubah dari form ini.</p>
+    </div>
+  </div>
+
+  <div class="flex flex-wrap items-center justify-end gap-2.5 border-t border-slate-200 pt-5">
+    <button type="reset" class="btn-secondary btn-sm">Reset</button>
+    <button type="submit" class="btn-warning btn-sm">
+      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+      </svg>
+      Simpan Perubahan
+    </button>
+  </div>
+</form>

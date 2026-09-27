@@ -1,5 +1,10 @@
 <?php
 require_once '../../Config/koneksi.php';
+require_once __DIR__ . '/../../Config/bootstrap.php';
+
+// Wajib login: halaman ini memuat/mengubah data perpustakaan.
+require_admin();
+
 
 $kodePinjam = $_GET['kode_pinjam'] ?? '';
 

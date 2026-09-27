@@ -1,0 +1,265 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 900" width="900" height="900" role="img" aria-label="Ilustrasi interior perpustakaan modern: rak buku tinggi, meja baca, lampu hangat, dan pengunjung yang membaca">
+  <defs>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#080d24"/>
+      <stop offset="0.42" stop-color="#101743"/>
+      <stop offset="1" stop-color="#1b1147"/>
+    </linearGradient>
+    <linearGradient id="floorG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0b1030"/>
+      <stop offset="1" stop-color="#05081a"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0" stop-color="#0e3a63"/>
+      <stop offset="0.55" stop-color="#1b2a6e"/>
+      <stop offset="1" stop-color="#3a2a72"/>
+    </linearGradient>
+    <linearGradient id="shaft" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7dd3fc" stop-opacity="0.30"/>
+      <stop offset="1" stop-color="#7dd3fc" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="bulbCone" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fcd34d" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#f59e0b" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="shelfSide" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#2b3364"/>
+      <stop offset="1" stop-color="#1b2049"/>
+    </linearGradient>
+    <linearGradient id="deskTop" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3a4488"/>
+      <stop offset="1" stop-color="#232a5c"/>
+    </linearGradient>
+    <radialGradient id="glowTL" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#4f46e5" stop-opacity="0.40"/>
+      <stop offset="1" stop-color="#4f46e5" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowTR" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#22d3ee" stop-opacity="0.30"/>
+      <stop offset="1" stop-color="#22d3ee" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="winHalo" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#38bdf8" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#38bdf8" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="poolCyan" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#38bdf8" stop-opacity="0.24"/>
+      <stop offset="1" stop-color="#38bdf8" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="poolAmber" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fbbf24" stop-opacity="0.30"/>
+      <stop offset="1" stop-color="#fbbf24" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="bulbGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fde68a" stop-opacity="0.75"/>
+      <stop offset="0.45" stop-color="#fbbf24" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#f59e0b" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="dof" x="-12%" y="-12%" width="124%" height="124%">
+      <feGaussianBlur stdDeviation="1.4"/>
+    </filter>
+    <pattern id="dots" width="26" height="26" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r="1" fill="#ffffff" fill-opacity="0.07"/>
+    </pattern>
+  </defs>
+
+  <!-- ============ DINDING & SUASANA ============ -->
+  <rect width="900" height="900" fill="url(#wall)"/>
+  <ellipse cx="90" cy="70" rx="430" ry="380" fill="url(#glowTL)"/>
+  <ellipse cx="792" cy="180" rx="330" ry="300" fill="url(#glowTR)"/>
+  <rect width="900" height="900" fill="url(#dots)"/>
+
+  <!-- Siluet rak buku jauh di kiri: hanya petunjuk kedalaman, tetap tenang. -->
+  <g filter="url(#dof)" opacity="0.5">
+    <rect x="54" y="300" width="232" height="348" fill="#ffffff" fill-opacity="0.035"/>
+    <g fill="#ffffff" fill-opacity="0.05">
+      <rect x="54" y="374" width="232" height="5"/>
+      <rect x="54" y="448" width="232" height="5"/>
+      <rect x="54" y="522" width="232" height="5"/>
+      <rect x="54" y="596" width="232" height="5"/>
+    </g>
+  </g>
+
+  <!-- ============ LANTAI ============ -->
+  <rect x="0" y="648" width="900" height="252" fill="url(#floorG)"/>
+  <rect x="0" y="647" width="900" height="2" fill="#8ea2ff" fill-opacity="0.16"/>
+  <ellipse cx="778" cy="704" rx="176" ry="40" fill="url(#poolCyan)"/>
+  <ellipse cx="812" cy="768" rx="150" ry="36" fill="url(#poolAmber)"/>
+
+  <!-- ============ JENDOLA LENGKUNG ============ -->
+  <ellipse cx="770" cy="300" rx="230" ry="240" fill="url(#winHalo)"/>
+  <path d="M664 470V226a106 106 0 0 1 212 0v244z" fill="url(#glass)"/>
+  <g stroke="#4b5aa8" stroke-width="4" fill="none" stroke-opacity="0.55">
+    <path d="M664 470V226a106 106 0 0 1 212 0v244"/>
+    <path d="M770 132v338"/>
+    <path d="M664 300h212"/>
+    <path d="M664 392h212"/>
+    <path d="M702 176a74 74 0 0 1 136 0"/>
+  </g>
+  <path d="M686 244a84 84 0 0 1 96-70 200 200 0 0 0-96 152z" fill="#bae6fd" fill-opacity="0.16"/>
+  <!-- Debu halus di berkas cahaya -->
+  <g fill="#e0f2fe">
+    <circle cx="736" cy="356" r="2.4" fill-opacity="0.34"/>
+    <circle cx="812" cy="416" r="1.8" fill-opacity="0.26"/>
+    <circle cx="782" cy="300" r="2" fill-opacity="0.22"/>
+    <circle cx="700" cy="430" r="1.6" fill-opacity="0.28"/>
+  </g>
+  <!-- Berkas cahaya turun ke lantai -->
+  <path d="M664 470h212l52 178H612z" fill="url(#shaft)" filter="url(#dof)"/>
+
+  <!-- ============ RAK BUKU TINGGI ============ -->
+  <g>
+    <rect x="390" y="140" width="264" height="12" fill="#2c3468"/>
+    <rect x="396" y="152" width="12" height="496" fill="url(#shelfSide)"/>
+    <rect x="636" y="152" width="12" height="496" fill="#171c40"/>
+    <rect x="408" y="152" width="228" height="486" fill="#0d1230"/>
+
+    <!-- Buku baris 1 -->
+    <g>
+      <rect x="416" y="174" width="16" height="96" rx="2" fill="#4f46e5"/>
+      <rect x="434" y="186" width="12" height="84" rx="2" fill="#6366f1"/>
+      <rect x="448" y="178" width="18" height="92" rx="2" fill="#22d3ee"/>
+      <rect x="468" y="192" width="10" height="78" rx="2" fill="#a78bfa"/>
+      <rect x="480" y="182" width="14" height="88" rx="2" fill="#f59e0b"/>
+      <rect x="496" y="172" width="20" height="98" rx="2" fill="#e2e8f0"/>
+      <rect x="518" y="188" width="12" height="82" rx="2" fill="#8b5cf6"/>
+      <rect x="532" y="180" width="16" height="90" rx="2" fill="#38bdf8"/>
+      <rect x="550" y="194" width="10" height="76" rx="2" fill="#4f46e5"/>
+      <rect x="562" y="176" width="18" height="94" rx="2" fill="#fbbf24"/>
+      <rect x="582" y="190" width="12" height="80" rx="2" fill="#cbd5e1"/>
+      <rect x="596" y="182" width="16" height="88" rx="2" fill="#6366f1"/>
+      <rect x="614" y="184" width="14" height="86" rx="2" fill="#34d399"/>
+      <g transform="rotate(-9 630 262)"><rect x="624" y="192" width="10" height="70" rx="2" fill="#fb7185"/></g>
+    </g>
+    <rect x="408" y="270" width="228" height="6" fill="#38427e"/>
+
+    <!-- Buku baris 2 -->
+    <g>
+      <rect x="416" y="302" width="14" height="88" rx="2" fill="#8b5cf6"/>
+      <rect x="432" y="296" width="18" height="94" rx="2" fill="#4f46e5"/>
+      <rect x="452" y="310" width="12" height="80" rx="2" fill="#fb7185"/>
+      <rect x="466" y="300" width="16" height="90" rx="2" fill="#38bdf8"/>
+      <rect x="484" y="318" width="10" height="72" rx="2" fill="#e2e8f0"/>
+      <rect x="496" y="294" width="20" height="96" rx="2" fill="#6366f1"/>
+      <rect x="518" y="306" width="14" height="84" rx="2" fill="#f59e0b"/>
+      <rect x="534" y="300" width="12" height="90" rx="2" fill="#22d3ee"/>
+      <rect x="548" y="310" width="16" height="80" rx="2" fill="#a78bfa"/>
+      <rect x="566" y="314" width="10" height="76" rx="2" fill="#cbd5e1"/>
+      <rect x="578" y="298" width="18" height="92" rx="2" fill="#4f46e5"/>
+      <rect x="598" y="304" width="14" height="86" rx="2" fill="#fbbf24"/>
+      <rect x="614" y="312" width="12" height="78" rx="2" fill="#38bdf8"/>
+    </g>
+    <!-- Tumpukan buku mendatar -->
+    <g>
+      <rect x="522" y="376" width="66" height="7" rx="2" fill="#6366f1"/>
+      <rect x="528" y="368" width="58" height="7" rx="2" fill="#fcd34d"/>
+    </g>
+    <rect x="408" y="390" width="228" height="6" fill="#38427e"/>
+
+    <!-- Buku baris 3 -->
+    <g>
+      <rect x="416" y="418" width="18" height="92" rx="2" fill="#22d3ee"/>
+      <rect x="436" y="428" width="12" height="82" rx="2" fill="#6366f1"/>
+      <rect x="450" y="420" width="16" height="90" rx="2" fill="#a78bfa"/>
+      <rect x="468" y="436" width="10" height="74" rx="2" fill="#e2e8f0"/>
+      <rect x="480" y="414" width="20" height="96" rx="2" fill="#8b5cf6"/>
+      <rect x="502" y="430" width="12" height="80" rx="2" fill="#4f46e5"/>
+      <rect x="516" y="422" width="16" height="88" rx="2" fill="#f59e0b"/>
+      <rect x="534" y="426" width="14" height="84" rx="2" fill="#34d399"/>
+      <rect x="550" y="418" width="12" height="92" rx="2" fill="#cbd5e1"/>
+      <rect x="564" y="424" width="18" height="86" rx="2" fill="#38bdf8"/>
+      <rect x="584" y="432" width="10" height="78" rx="2" fill="#fb7185"/>
+      <rect x="596" y="420" width="16" height="90" rx="2" fill="#6366f1"/>
+      <g transform="rotate(8 622 502)"><rect x="616" y="428" width="12" height="74" rx="2" fill="#fcd34d"/></g>
+    </g>
+    <rect x="408" y="510" width="228" height="6" fill="#38427e"/>
+
+    <!-- Buku baris 4 -->
+    <g>
+      <rect x="416" y="544" width="12" height="86" rx="2" fill="#6366f1"/>
+      <rect x="430" y="538" width="16" height="92" rx="2" fill="#f59e0b"/>
+      <rect x="448" y="554" width="10" height="76" rx="2" fill="#22d3ee"/>
+      <rect x="460" y="540" width="18" height="90" rx="2" fill="#4f46e5"/>
+      <rect x="480" y="548" width="14" height="82" rx="2" fill="#e2e8f0"/>
+      <rect x="496" y="534" width="20" height="96" rx="2" fill="#8b5cf6"/>
+      <rect x="518" y="546" width="12" height="84" rx="2" fill="#38bdf8"/>
+      <rect x="532" y="542" width="16" height="88" rx="2" fill="#a78bfa"/>
+      <rect x="550" y="552" width="12" height="78" rx="2" fill="#fcd34d"/>
+      <rect x="564" y="538" width="18" height="92" rx="2" fill="#4f46e5"/>
+      <rect x="584" y="550" width="14" height="80" rx="2" fill="#cbd5e1"/>
+      <rect x="600" y="544" width="16" height="86" rx="2" fill="#22d3ee"/>
+      <rect x="618" y="556" width="10" height="74" rx="2" fill="#fbbf24"/>
+    </g>
+    <rect x="408" y="630" width="228" height="6" fill="#38427e"/>
+  </g>
+
+  <!-- Tanaman di atas rak -->
+  <g>
+    <path d="M604 140h32l-5-26h-22z" fill="#2a3160"/>
+    <g fill="#10b981" fill-opacity="0.85">
+      <path d="M620 114c-16-6-22-22-18-38 16 4 22 20 18 38z"/>
+      <path d="M620 114c14-8 18-24 12-40-15 6-19 22-12 40z"/>
+      <path d="M620 114c-2-16 6-30 20-36 2 16-6 30-20 36z"/>
+    </g>
+  </g>
+
+  <!-- ============ PENGUNJUNG MEMBACA (mid-ground, sedikit blur) ============ -->
+  <g filter="url(#dof)" opacity="0.82">
+    <ellipse cx="512" cy="648" rx="46" ry="9" fill="#000000" fill-opacity="0.35"/>
+    <path d="M494 648c-2-40 2-70 6-92l24 2c5 24 8 52 6 90z" fill="#0a0e26"/>
+    <circle cx="512" cy="536" r="21" fill="#0a0e26"/>
+    <path d="M506 596c14 6 26 4 34-6" stroke="#0a0e26" stroke-width="12" fill="none" stroke-linecap="round"/>
+    <path d="M492 566l40 6-3 26-41-6z" fill="#151a3d" stroke="#5b6bb8" stroke-width="1.4" stroke-opacity="0.5"/>
+    <path d="M492 566v26" stroke="#5b6bb8" stroke-width="1.4" stroke-opacity="0.5"/>
+  </g>
+
+  <!-- ============ MEJA BACA ============ -->
+  <g>
+    <rect x="596" y="686" width="296" height="12" rx="4" fill="url(#deskTop)"/>
+    <rect x="596" y="686" width="296" height="3" fill="#4d59a8" fill-opacity="0.7"/>
+    <rect x="614" y="698" width="10" height="88" rx="3" fill="#1c2248"/>
+    <rect x="864" y="698" width="10" height="88" rx="3" fill="#1c2248"/>
+    <rect x="700" y="700" width="88" height="7" rx="3" fill="#161b3c"/>
+
+    <!-- Buku terbuka di meja -->
+    <path d="M648 686c14-10 30-10 42-2v-9c-12-8-28-8-42 2z" fill="#e2e8f0" fill-opacity="0.92"/>
+    <path d="M690 684c12-8 28-8 42 2v-9c-14-10-30-10-42-2z" fill="#cbd5e1" fill-opacity="0.92"/>
+    <path d="M690 675v9" stroke="#94a3b8" stroke-width="1.6" stroke-opacity="0.7"/>
+
+    <!-- Lampu meja -->
+    <ellipse cx="812" cy="682" rx="17" ry="5" fill="#1c2248"/>
+    <rect x="809" y="620" width="5" height="62" rx="2" fill="#3a4488"/>
+    <path d="M811 622l26-20" stroke="#3a4488" stroke-width="5" stroke-linecap="round"/>
+    <path d="M822 588h34l-8 24h-18z" fill="#fcd34d"/>
+    <path d="M822 588h34l-2 6h-30z" fill="#fef3c7" fill-opacity="0.85"/>
+    <circle cx="839" cy="608" r="56" fill="url(#bulbGlow)"/>
+    <path d="M824 612h20l30 74h-80z" fill="url(#bulbCone)"/>
+  </g>
+
+  <!-- Kursi + pengunjung yang membaca (foreground) -->
+  <g>
+    <ellipse cx="740" cy="792" rx="72" ry="12" fill="#000000" fill-opacity="0.4"/>
+    <rect x="684" y="592" width="11" height="62" rx="5" fill="#171c40"/>
+    <rect x="690" y="646" width="82" height="11" rx="5" fill="#232a5c"/>
+    <rect x="700" y="657" width="8" height="34" rx="3" fill="#171c40"/>
+    <rect x="754" y="657" width="8" height="34" rx="3" fill="#171c40"/>
+
+    <path d="M700 646c-2-40 6-62 26-70h44c22 8 28 30 26 70z" fill="#0b1030"/>
+    <circle cx="748" cy="552" r="24" fill="#0b1030"/>
+    <path d="M726 540c10-10 32-12 44 0" stroke="#5b6bb8" stroke-width="2" stroke-opacity="0.45" fill="none" stroke-linecap="round"/>
+    <path d="M714 594c6 26 22 42 44 50" stroke="#0b1030" stroke-width="14" fill="none" stroke-linecap="round"/>
+    <path d="M702 640c0-34 6-52 22-60" stroke="#5b6bb8" stroke-width="2" stroke-opacity="0.4" fill="none" stroke-linecap="round"/>
+    <path d="M744 636h48l-4 12h-48z" fill="#e2e8f0" fill-opacity="0.88"/>
+  </g>
+
+  <!-- Tanaman lantai -->
+  <g>
+    <ellipse cx="866" cy="812" rx="44" ry="9" fill="#000000" fill-opacity="0.4"/>
+    <path d="M846 812h40l-6-46h-28z" fill="#2a3160"/>
+    <g fill="#10b981" fill-opacity="0.8">
+      <path d="M866 766c-20-10-26-30-20-50 20 8 26 28 20 50z"/>
+      <path d="M866 766c18-12 22-32 14-52-18 10-22 30-14 52z"/>
+      <path d="M866 766c0-20 10-36 28-42 0 20-10 36-28 42z"/>
+    </g>
+  </g>
+</svg>

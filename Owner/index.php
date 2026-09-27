@@ -1,4 +1,8 @@
 <?php
-// Redirect ke halaman lain
-header("Location: Layouts/login.php");
-exit; // Menghentikan eksekusi script lebih lanjut
+/**
+ * Entry point panel Owner.
+ *
+ * Login sudah terpadu di /login.php - tidak ada pemilihan peran lagi.
+ */
+header('Location: ../login.php');
+exit;

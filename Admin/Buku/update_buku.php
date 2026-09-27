@@ -1,5 +1,10 @@
 <?php
-require_once '../../Config/koneksi.php';
+require_once __DIR__ . '/../../Config/bootstrap.php';
+require_once __DIR__ . '/../../Config/koneksi.php';
+
+// Wajib login: halaman ini memuat/mengubah data perpustakaan.
+require_admin();
+
 
 // Proses update data buku
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -42,28 +47,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([$judul_buku, $pengarang, $penerbit, $tanggal_terbit, $bahasa, $kategori, $stok, $jumlah_halaman, $deskripsi_buku, $cover_name, $kode_buku]);
 
         if ($stmt->rowCount() > 0) {
-            echo "<script>
-                    alert('Buku berhasil diperbarui.');
-                    window.location.href = 'buku.php';
-                  </script>";
+            flash('success', 'Buku berhasil diperbarui.');
         } else {
-            echo "<script>
-                    alert('Tidak ada perubahan yang dilakukan.');
-                    window.location.href = 'buku.php';
-                  </script>";
+            flash('info', 'Tidak ada perubahan yang dilakukan.');
         }
     } catch (PDOException $e) {
-        echo "<script>
-                alert('Terjadi kesalahan: " . $e->getMessage() . "');
-              </script>";
+        flash('danger', 'Terjadi kesalahan: ' . $e->getMessage());
+        header('Location: buku.php');
+        exit;
     } catch (Exception $e) {
-        echo "<script>
-                alert('Terjadi kesalahan: " . $e->getMessage() . "');
-              </script>";
+        flash('danger', 'Terjadi kesalahan: ' . $e->getMessage());
+        header('Location: buku.php');
+        exit;
     }
 } else {
-    echo "<script>
-            alert('Metode request tidak valid.');
-            window.location.href = 'buku.php';
-          </script>";
+    flash('danger', 'Metode request tidak valid.');
 }
+
+header('Location: buku.php');
+exit;

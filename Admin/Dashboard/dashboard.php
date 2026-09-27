@@ -1,40 +1,43 @@
 <?php
-session_start(); // Aktifkan sesi
+/**
+ * Dashboard Admin
+ *
+ * QUERY TIDAK BERUBAH dari versi lama. Yang berubah hanya markup + CSS.
+ * Semua nilai statistik memakai rowCount() seperti sebelumnya.
+ */
+session_start();
 require_once '../../Config/koneksi.php';
-include '../Layouts/header.php';
 
-
-
-// Query untuk mendapatkan jumlah anggota, buku, peminjaman, dan pengembalian
-$anggotaResult = $conn->query("SELECT * FROM anggota");
-$bukuResult = $conn->query("SELECT * FROM buku");
-$peminjamanResult = $conn->query("SELECT * FROM peminjaman");
-$pengembalianResult = $conn->query("SELECT * FROM pengembalian");
-
-// Pastikan ada sesi untuk ID petugas
+// Pastikan sesi untuk ID petugas (cek versi lama dipertahankan)
 if (!isset($_SESSION['id_petugas'])) {
-    header("Location: ../Layouts/login.php");
+    header('Location: ../../login.php');
     exit();
 }
 
-$id_petugas = $_SESSION['id_petugas']; // Ambil ID petugas dari sesi
+$id_petugas = $_SESSION['id_petugas'];
+
+// Query untuk mendapatkan jumlah anggota, buku, peminjaman, dan pengembalian
+$anggotaResult      = $conn->query("SELECT * FROM anggota");
+$bukuResult         = $conn->query("SELECT * FROM buku");
+$peminjamanResult   = $conn->query("SELECT * FROM peminjaman");
+$pengembalianResult = $conn->query("SELECT * FROM pengembalian");
 
 // Query untuk mendapatkan nama petugas
 $query = "SELECT nama_petugas, profil_gambar FROM petugas WHERE id_petugas = :id_petugas";
-$stmt = $conn->prepare(query: $query);
+$stmt = $conn->prepare($query);
 $stmt->bindParam(':id_petugas', $id_petugas, PDO::PARAM_INT);
 $stmt->execute();
 
-$nama_petugas = "Tidak Diketahui"; // Default jika tidak ditemukan
+$nama_petugas = "Tidak Diketahui";
+$profil_gambar = '';
 
 if ($stmt->rowCount() > 0) {
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    $nama_petugas = htmlspecialchars($row['nama_petugas']);
-    $profil_gambar = htmlspecialchars($row['profil_gambar']);
+    $nama_petugas = $row['nama_petugas'];
+    $profil_gambar = $row['profil_gambar'];
 }
 
-// Tanggal otomatis sesuai login
-$tanggal_hari_ini = date('jS F Y'); // Format: 14th Aug 2023
+$tanggal_hari_ini = date('jS F Y');
 
 // Query untuk peminjaman yang perlu dikembalikan
 $queryPinjamKembali = "
@@ -54,313 +57,248 @@ $queryBelumLunas = "
     WHERE pk.status = 'Belum Lunas'
 ";
 $stmtBelumLunas = $conn->query($queryBelumLunas);
+
+$namaUser  = $nama_petugas;
+$fotoUser  = $profil_gambar;
+$menuAktif = 'dashboard';
+include '../Layouts/header.php';
 ?>
-<section class="home-section">
-    <div class="container-fluid mt-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <!-- Judul dan Tanggal -->
-            <div>
-                <h2 class="fw-bold text-dark mb-0">Dashboard</h2>
-                <p class="text-muted"><?= $tanggal_hari_ini; ?></p>
-            </div>
 
-            <!-- Bagian Profil -->
-            <div class="d-flex align-items-center gap-4">
-                <!-- Ikon Pesan -->
-                <button class="btn btn-light border rounded-4 message-icon">
-                    <i class="fas fa-sign-out-alt rotated-icon" id="log_out" onclick="confirmLogout()"></i>
-                </button>
-                <div class="d-flex align-items-center">
-                    <img src="../../Assets/uploads/<?= htmlspecialchars($profil_gambar); ?>" alt="Profile Image" class="profile-img me-3" style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%;">
-                    <div>
-                        <h6 class="fw-bold mb-0"><?= $nama_petugas; ?></h6>
-                        <p class="mb-0 text-muted">Admin</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+<!-- ================= HEADER HALAMAN ================= -->
+<section class="flex flex-wrap items-end justify-between gap-4">
+  <div>
+    <h1 class="text-title">Dashboard</h1>
+    <p class="text-muted mt-1">Ringkasan aktivitas perpustakaan &middot; <?= $tanggal_hari_ini ?></p>
+  </div>
 
-        <div class="row">
-            <!-- Anggota Terdaftar -->
-            <div class="col-md-3">
-                <div class="card shadow-sm border-0 mb-4 anggota-card">
-                    <div class="card-body text-center anggota-content mt-4 mb-4 me-4">
-                        <div class="icon-box d-flex align-items-center justify-content-center">
-                            <div class="icon-circle mb-3">
-                                <i class="bx bx-user fs-2"></i>
-                            </div>
-                            <div class="ms-4 text-start">
-                                <h3 class="fw-bold mb-1"><?= $anggotaResult->rowCount(); ?></h3>
-                                <p>Anggota</p>
-                            </div>
-                        </div>
-                        <a href="../Anggota/anggota.php" class="btn btn-light btn-sm rounded-3">Lihat Semua</a>
-                    </div>
-                </div>
-            </div>
-            <!-- Buku Tersedia -->
-            <div class="col-md-3">
-                <div class="card shadow-sm border-0 mb-4 buku-card">
-                    <div class="card-body text-center buku-content mt-4 mb-4 me-4">
-                        <div class="icon-box d-flex align-items-center justify-content-center">
-                            <div class="icon-circle mb-3">
-                                <i class="bx bx-book fs-2"></i>
-                            </div>
-                            <div class="ms-4 text-start">
-                                <h3 class="fw-bold mb-1"><?= $bukuResult->rowCount(); ?></h3>
-                                <p>Buku</p>
-                            </div>
-                        </div>
-                        <a href="../Buku/buku.php" class="btn btn-light btn-sm rounded-3">Lihat Semua</a>
-                    </div>
-                </div>
-            </div>
-            <!-- Peminjaman -->
-            <div class="col-md-3">
-                <div class="card shadow-sm border-0 mb-4 peminjaman-card">
-                    <div class="card-body text-center peminjaman-content mt-4 mb-4 me-4">
-                        <div class="icon-box d-flex align-items-center justify-content-center">
-                            <div class="icon-circle mb-3">
-                                <i class="bx bx-book-reader fs-2"></i>
-                            </div>
-                            <div class="ms-4 text-start">
-                                <h3 class="fw-bold mb-1"><?= $peminjamanResult->rowCount(); ?></h3>
-                                <p>Peminjaman</p>
-                            </div>
-                        </div>
-                        <a href="../Peminjaman/peminjaman.php" class="btn btn-light btn-sm rounded-3">Lihat Semua</a>
-                    </div>
-                </div>
-            </div>
-            <!-- Pengembalian -->
-            <div class="col-md-3">
-                <div class="card shadow-sm border-0 mb-4 pengembalian-card">
-                    <div class="card-body text-center pengembalian-content mt-4 mb-4 me-4">
-                        <div class="icon-box d-flex align-items-center justify-content-center">
-                            <div class="icon-circle mb-3">
-                                <i class="bx bx-reset fs-2"></i>
-                            </div>
-                            <div class="ms-4 text-start">
-                                <h3 class="fw-bold mb-1"><?= $pengembalianResult->rowCount(); ?></h3>
-                                <p>Pengembalian</p>
-                            </div>
-                        </div>
-                        <a href="../Pengembalian/pengembalian.php" class="btn btn-light btn-sm rounded-3">Lihat Semua</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-
-        <!-- Flex Container for Calendar and Lists -->
-        <div class="row">
-            <div class="col-md-6">
-                <div class="calendar border border-secondary border-opacity-75 p-3 rounded-3 d-flex">
-                    <!-- Calendar Section -->
-                    <div class="calendar-content flex-grow-1">
-                        <div class="calendar-header d-flex justify-content-between align-items-center mb-3">
-                            <button id="prev" class="btn btn-primary">❮</button>
-                            <h2 id="month-year" class="mb-0">January 2025</h2>
-                            <button id="next" class="btn btn-primary">❯</button>
-                        </div>
-                        <div class="calendar-grid" id="calendar-grid" class="d-grid grid-template-columns-7 gap-2 text-center">
-                            <!-- Grid of days will go here -->
-                        </div>
-                    </div>
-                    <div class="anime-image ms-3" style="width: 50%; padding: px;">
-                        <img id="random-image" src="https://via.placeholder.com/150" alt="Mirrored Image" class="img-fluid rounded-3" style="transform: scaleX(-1);" />
-                    </div>
-                </div>
-            </div>
-            <!-- Daftar Pengembalian yang Perlu Dikembalikan -->
-            <div class="col-md-6">
-                <!-- Pengembalian yang Perlu Dikembalikan -->
-                <div class="d-flex card shadow-sm p-3 border-0 rounded-4" style="background-color: #f0f9ff;">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="icon-box rounded-circle text-center" style="background-color: #d1f2ff; width: 50px; height: 50px;">
-                            <i class="bx bx-time-five text-primary" style="font-size: 24px; line-height: 50px;"></i>
-                        </div>
-                        <div>
-                            <h5 class="fw-bold mb-0">Perlu Dikembalikan</h5>
-                            <p class="text-muted small">Daftar buku yang harus segera dikembalikan</p>
-                        </div>
-                    </div>
-                    <hr>
-                    <div>
-                        <?php if ($stmtPinjamKembali->rowCount() > 0): ?>
-                            <?php while ($row = $stmtPinjamKembali->fetch(PDO::FETCH_ASSOC)): ?>
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <div>
-                                        <h6 class="fw-bold text-dark mb-0">Kode: <?= htmlspecialchars($row['kode_pinjam']); ?></h6>
-                                        <p class="text-muted mb-0 small">Nama: <?= htmlspecialchars($row['nama']); ?></p>
-                                        <p class="text-muted small">Estimasi: <?= htmlspecialchars($row['estimasi_pinjam']); ?></p>
-                                    </div>
-                                    <div>
-                                        <a href="../Peminjaman/peminjaman.php" class="btn btn-primary text-white">Pinjam</a>
-                                    </div>
-                                </div>
-                            <?php endwhile; ?>
-                        <?php else: ?>
-                            <p class="text-muted">Tidak ada peminjaman yang perlu dikembalikan.</p>
-                        <?php endif; ?>
-                    </div>
-                </div>
-
-                <!-- Pengembalian Belum Lunas -->
-                <div class="mt-4">
-                    <div class="card shadow-sm p-3 border-0 rounded-4" style="background-color: #fff8e6;">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="icon-box rounded-circle text-center" style="background-color: #ffe4b5; width: 50px; height: 50px;">
-                                <i class="bx bx-credit-card text-warning" style="font-size: 24px; line-height: 50px;"></i>
-                            </div>
-                            <div>
-                                <h5 class="fw-bold mb-0">Belum Lunas</h5>
-                                <p class="text-muted small">Daftar pengembalian dengan denda belum lunas</p>
-                            </div>
-                        </div>
-                        <hr>
-                        <div>
-                            <?php if ($stmtBelumLunas->rowCount() > 0): ?>
-                                <?php while ($row = $stmtBelumLunas->fetch(PDO::FETCH_ASSOC)): ?>
-                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <div>
-                                            <h6 class="fw-bold text-dark mb-0">Kode: <?= htmlspecialchars($row['kode_kembali']); ?></h6>
-                                            <p class="text-muted mb-0 small">Nama: <?= htmlspecialchars($row['nama']); ?></p>
-                                            <p class="text-muted small">Denda: Rp<?= number_format($row['denda'], 2, ',', '.'); ?></p>
-                                        </div>
-                                        <div>
-                                            <a href="../Pengembalian/pengembalian.php" class="btn btn-warning text-white">Denda</a>
-                                        </div>
-                                    </div>
-                                <?php endwhile; ?>
-                            <?php else: ?>
-                                <p class="text-muted">Tidak ada pengembalian yang belum lunas.</p>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+  <div class="flex items-center gap-3">
+    <a href="../../logout.php"
+       data-confirm="Yakin ingin logout dari panel admin?"
+       class="btn-secondary btn-sm">
+      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+      </svg>
+      Keluar
+    </a>
+  </div>
 </section>
 
-<!-- Modal Konfirmasi Logout -->
-<div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="logoutModalLabel">Konfirmasi Logout</h5>
-                <!-- Tombol tutup dihilangkan -->
-            </div>
-            <div class="modal-body">
-                Apakah Anda yakin ingin logout?
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                <button type="button" class="btn btn-danger" onclick="logout()">Logout</button>
-            </div>
-        </div>
+<!-- ================= STAT CARDS ================= -->
+<section class="mt-6 grid grid-cols-2 gap-4 xl:grid-cols-4">
+
+  <?php
+  $kartu = [
+      ['label' => 'Anggota', 'nilai' => $anggotaResult->rowCount(), 'href' => '../Anggota/anggota.php',
+       'chip' => 'bg-brand-50 text-brand-600', 'ikon' => 'M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z'],
+      ['label' => 'Buku', 'nilai' => $bukuResult->rowCount(), 'href' => '../Buku/buku.php',
+       'chip' => 'bg-emerald-50 text-emerald-600', 'ikon' => 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253'],
+      ['label' => 'Peminjaman', 'nilai' => $peminjamanResult->rowCount(), 'href' => '../Peminjaman/peminjaman.php',
+       'chip' => 'bg-amber-50 text-amber-600', 'ikon' => 'M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 006 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25'],
+      ['label' => 'Pengembalian', 'nilai' => $pengembalianResult->rowCount(), 'href' => '../Pengembalian/pengembalian.php',
+       'chip' => 'bg-violet-50 text-violet-600', 'ikon' => 'M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3m-9-6h.01'],
+  ];
+
+  foreach ($kartu as $k): ?>
+    <a href="<?= $k['href'] ?>" class="stat-card card-hover">
+      <span class="stat-icon <?= $k['chip'] ?>">
+        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="<?= $k['ikon'] ?>" />
+        </svg>
+      </span>
+      <div class="min-w-0">
+        <p class="text-2xl font-bold leading-none text-slate-900"><?= $k['nilai'] ?></p>
+        <p class="text-muted mt-1.5 truncate"><?= $k['label'] ?></p>
+      </div>
+    </a>
+  <?php endforeach; ?>
+
+</section>
+
+<!-- ================= KALENDER + PANDAI ================= -->
+<section class="mt-6 grid gap-6 xl:grid-cols-2">
+
+  <!-- Kalender -->
+  <div class="card-base p-5">
+    <div class="mb-4 flex items-center justify-between">
+      <h2 class="text-section" id="month-year">&nbsp;</h2>
+      <div class="flex gap-1.5">
+        <button type="button" id="prev" aria-label="Bulan sebelumnya"
+                class="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-50 hover:text-slate-900">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+          </svg>
+        </button>
+        <button type="button" id="next" aria-label="Bulan berikutnya"
+                class="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-50 hover:text-slate-900">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+          </svg>
+        </button>
+      </div>
     </div>
-</div>
+
+    <div id="calendar-grid" class="grid grid-cols-7 gap-1.5 text-center"></div>
+  </div>
+
+  <!-- Perlu dikembalikan -->
+  <div class="card-base overflow-hidden">
+    <div class="flex items-center gap-3 border-b border-slate-200 bg-rose-50/50 px-5 py-4">
+      <span class="stat-icon bg-rose-100 text-rose-600">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </span>
+      <div>
+        <h2 class="text-sm font-semibold text-slate-900">Perlu Dikembalikan</h2>
+        <p class="text-muted mt-0.5">Peminjaman yang sudah melewati batas waktu</p>
+      </div>
+      <span class="badge-late ml-auto"><?= $stmtPinjamKembali->rowCount() ?></span>
+    </div>
+
+    <div class="divide-y divide-slate-100">
+      <?php if ($stmtPinjamKembali->rowCount() > 0): ?>
+        <?php while ($row = $stmtPinjamKembali->fetch(PDO::FETCH_ASSOC)): ?>
+          <div class="flex items-center justify-between gap-4 px-5 py-3.5 transition hover:bg-slate-50">
+            <div class="min-w-0">
+              <p class="truncate text-sm font-semibold text-slate-900">
+                <code class="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] text-slate-600">
+                  <?= htmlspecialchars($row['kode_pinjam']) ?>
+                </code>
+                <?= htmlspecialchars($row['nama']) ?>
+              </p>
+              <p class="text-muted mt-1 text-xs">
+                Estimasi <?= date('d/m/Y', strtotime($row['estimasi_pinjam'])) ?>
+              </p>
+            </div>
+            <a href="../Peminjaman/peminjaman.php" class="btn-secondary btn-sm shrink-0">Detail</a>
+          </div>
+        <?php endwhile; ?>
+      <?php else: ?>
+        <p class="px-5 py-10 text-center text-sm text-slate-500">
+          Tidak ada peminjaman yang perlu dikembalikan.
+        </p>
+      <?php endif; ?>
+    </div>
+  </div>
+
+</section>
+
+<!-- ================= BELUM LUNAS ================= -->
+<section class="card-base mt-6 overflow-hidden">
+  <div class="flex items-center gap-3 border-b border-slate-200 bg-amber-50/50 px-5 py-4">
+    <span class="stat-icon bg-amber-100 text-amber-600">
+      <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    </span>
+    <div>
+      <h2 class="text-sm font-semibold text-slate-900">Denda Belum Lunas</h2>
+      <p class="text-muted mt-0.5">Pengembalian yang dendanya belum dibayar</p>
+    </div>
+    <span class="badge-due ml-auto"><?= $stmtBelumLunas->rowCount() ?></span>
+  </div>
+
+  <?php if ($stmtBelumLunas->rowCount() > 0): ?>
+    <div class="overflow-x-auto">
+      <table class="table-base">
+        <thead>
+          <tr>
+            <th>Kode Kembali</th>
+            <th>Nama Anggota</th>
+            <th class="text-right">Denda</th>
+            <th>Pembayaran</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php while ($row = $stmtBelumLunas->fetch(PDO::FETCH_ASSOC)): ?>
+            <tr>
+              <td>
+                <code class="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] text-slate-600">
+                  <?= htmlspecialchars($row['kode_kembali']) ?>
+                </code>
+              </td>
+              <td class="font-medium text-slate-900"><?= htmlspecialchars($row['nama']) ?></td>
+              <td class="whitespace-nowrap text-right font-semibold text-rose-600">
+                Rp<?= number_format((float) $row['denda'], 2, ',', '.') ?>
+              </td>
+              <td><span class="badge-info"><?= htmlspecialchars((string) ($row['pembayaran'] ?? '-')) ?></span></td>
+              <td class="text-right">
+                <a href="../Pengembalian/pengembalian.php" class="btn-secondary btn-sm">Proses</a>
+              </td>
+            </tr>
+          <?php endwhile; ?>
+        </tbody>
+      </table>
+    </div>
+  <?php else: ?>
+    <p class="px-5 py-10 text-center text-sm text-slate-500">
+      Semua denda sudah lunas.
+    </p>
+  <?php endif; ?>
+</section>
+
 <script>
-    // Fungsi untuk menampilkan gambar secara acak
-    function displayRandomImage() {
-        // Daftar nama file gambar di folder ../../Assets/Anime Date
-        const images = ["anime1.jpg", "anime2.jpg", "anime3.jpg", "anime4.jpg", "anime5.jpg", "anime6.jpg"];
+  /* Kalender ringan, tanpa library. */
+  (function () {
+    const grid  = document.getElementById('calendar-grid');
+    const label = document.getElementById('month-year');
+    if (!grid || !label) return;
 
-        // Pilih gambar secara acak
-        const randomIndex = Math.floor(Math.random() * images.length);
-        const selectedImage = images[randomIndex];
+    const bulan = ["Januari","Februari","Maret","April","Mei","Juni",
+                   "Juli","Agustus","September","Oktober","November","Desember"];
+    const hari  = ["Min","Sen","Sel","Rab","Kam","Jum","Sab"];
 
-        // Update atribut src pada elemen img
-        const imageElement = document.getElementById("random-image");
-        imageElement.src = `../../Assets/Anime Date/${selectedImage}`;
+    let sekarang = new Date();
+
+    function gambar() {
+      grid.innerHTML = '';
+      const t = sekarang.getMonth();
+      const y = sekarang.getFullYear();
+      label.textContent = bulan[t] + ' ' + y;
+
+      hari.forEach((h) => {
+        const el = document.createElement('div');
+        el.className = 'text-[11px] font-semibold uppercase tracking-wider text-slate-400 py-1';
+        el.textContent = h;
+        grid.appendChild(el);
+      });
+
+      // Sel kosong sebelum tanggal 1
+      for (let i = 0; i < new Date(y, t, 1).getDay(); i++) {
+        grid.appendChild(document.createElement('div'));
+      }
+
+      const total = new Date(y, t + 1, 0).getDate();
+      const hariIni = new Date();
+
+      for (let d = 1; d <= total; d++) {
+        const el = document.createElement('div');
+        const iniBulanIni = t === hariIni.getMonth() && y === hariIni.getFullYear();
+        el.textContent = d;
+        el.className = 'rounded-lg py-2 text-sm transition ' + (
+          d === hariIni.getDate() && iniBulanIni
+            ? 'bg-brand-600 font-bold text-white'
+            : 'text-slate-600 hover:bg-slate-100'
+        );
+        grid.appendChild(el);
+      }
     }
 
-    // Jalankan fungsi saat halaman dimuat
-    window.onload = displayRandomImage;
-
-    function confirmLogout() {
-        var myModal = new bootstrap.Modal(document.getElementById('logoutModal'));
-        myModal.show();
-    }
-
-    function logout() {
-        window.location.href = "logout.php"; // Redirect ke logout.php
-    }
-
-    const monthNames = [
-        "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-        "Juli", "Agustus", "September", "Oktober", "November", "Desember"
-    ];
-    const dayNames = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
-
-    const calendarGrid = document.getElementById("calendar-grid");
-    const monthYearLabel = document.getElementById("month-year");
-    const prevButton = document.getElementById("prev");
-    const nextButton = document.getElementById("next");
-
-    let currentDate = new Date();
-
-    function renderCalendar() {
-        calendarGrid.innerHTML = "";
-
-        // Set month and year
-        const month = currentDate.getMonth();
-        const year = currentDate.getFullYear();
-        monthYearLabel.textContent = `${monthNames[month]} ${year}`;
-
-        // Create day headers
-        dayNames.forEach(day => {
-            const dayHeader = document.createElement("div");
-            dayHeader.textContent = day;
-            dayHeader.classList.add("day-header");
-            calendarGrid.appendChild(dayHeader);
-        });
-
-        // First day of the month
-        const firstDay = new Date(year, month, 1).getDay();
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-        // Create blank days
-        for (let i = 0; i < firstDay; i++) {
-            const blankDay = document.createElement("div");
-            blankDay.classList.add("day");
-            calendarGrid.appendChild(blankDay);
-        }
-
-        // Create actual days
-        for (let day = 1; day <= daysInMonth; day++) {
-            const dayElement = document.createElement("div");
-            dayElement.textContent = day;
-            dayElement.classList.add("day");
-
-            // Highlight current day
-            if (
-                day === currentDate.getDate() &&
-                month === new Date().getMonth() &&
-                year === new Date().getFullYear()
-            ) {
-                dayElement.classList.add("current-day");
-            }
-
-            calendarGrid.appendChild(dayElement);
-        }
-    }
-
-    // Navigate months
-    prevButton.addEventListener("click", () => {
-        currentDate.setMonth(currentDate.getMonth() - 1);
-        renderCalendar();
+    document.getElementById('prev').addEventListener('click', () => {
+      sekarang.setMonth(sekarang.getMonth() - 1);
+      gambar();
     });
 
-    nextButton.addEventListener("click", () => {
-        currentDate.setMonth(currentDate.getMonth() + 1);
-        renderCalendar();
+    document.getElementById('next').addEventListener('click', () => {
+      sekarang.setMonth(sekarang.getMonth() + 1);
+      gambar();
     });
 
-    // Initial render
-    renderCalendar();
+    gambar();
+  })();
 </script>
-<!-- Flatpickr Script -->
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<?php include '../Layouts/footer.php'; ?>

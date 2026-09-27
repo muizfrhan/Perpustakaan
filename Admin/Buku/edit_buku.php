@@ -1,5 +1,16 @@
 <?php
-require_once '../../Config/koneksi.php';
+/**
+ * Form Edit Buku (fragment AJAX).
+ *
+ * Dimuat ke dalam #editModalContent oleh buku.php.
+ * Nama field TIDAK BERUBAH agar tetap kompatibel dengan update_buku.php.
+ */
+require_once __DIR__ . '/../../Config/bootstrap.php';
+require_once __DIR__ . '/../../Config/koneksi.php';
+
+// Wajib login: halaman ini memuat/mengubah data perpustakaan.
+require_admin();
+
 
 // Ambil data buku berdasarkan kode_buku
 if (isset($_GET['kode_buku'])) {
@@ -11,16 +22,13 @@ if (isset($_GET['kode_buku'])) {
         $buku = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$buku) {
-            echo "<script>
-                    alert('Buku tidak ditemukan.');
-                    window.location.href = 'buku.php';
-                  </script>";
+            flash('danger', 'Buku tidak ditemukan.');
+            header('Location: buku.php');
             exit;
         }
     } catch (PDOException $e) {
-        echo "<script>
-                alert('Terjadi kesalahan: " . $e->getMessage() . "');
-              </script>";
+        flash('danger', 'Terjadi kesalahan: ' . $e->getMessage());
+        header('Location: buku.php');
         exit;
     }
 }
@@ -57,87 +65,111 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $conn->prepare("UPDATE buku SET judul_buku = ?, pengarang = ?, penerbit = ?, tanggal_terbit = ?, bahasa = ?, kategori = ?, jumlah_halaman = ?, stok = ?, deskripsi_buku = ?, cover = ? WHERE kode_buku = ?");
         $stmt->execute([$judul_buku, $pengarang, $penerbit, $tanggal_terbit, $bahasa, $kategori, $stok, $jumlah_halaman, $deskripsi_buku, $cover_name, $kode_buku]);
 
-        if ($stmt->rowCount() > 0) {
-            echo "<script>
-                    alert('Buku berhasil diperbarui.');
-                    window.location.href = 'buku.php';
-                  </script>";
-        } else {
-            echo "<script>
-                    alert('Tidak ada perubahan yang dilakukan.');
-                    window.location.href = 'buku.php';
-                  </script>";
-        }
+        flash($stmt->rowCount() > 0 ? 'success' : 'info',
+              $stmt->rowCount() > 0 ? 'Buku berhasil diperbarui.' : 'Tidak ada perubahan yang dilakukan.');
+        header('Location: buku.php');
+        exit;
     } catch (PDOException $e) {
-        echo "<script>
-                alert('Terjadi kesalahan: " . $e->getMessage() . "');
-              </script>";
+        flash('danger', 'Terjadi kesalahan: ' . $e->getMessage());
+        header('Location: buku.php');
+        exit;
     }
 }
+
+$e = static fn($v) => htmlspecialchars((string) $v);
 ?>
 
-<!-- Form Edit Buku -->
-<form method="POST" action="update_buku.php" enctype="multipart/form-data">
-    <div class="row g-3">
-        <div class="col-md-6">
-            <label for="kode_buku" class="form-label">Kode Buku</label>
-            <input type="text" class="form-control" id="kode_buku" name="kode_buku" value="<?= $buku['kode_buku'] ?>" readonly>
-        </div>
-        <div class="col-md-6">
-            <label for="judul_buku" class="form-label">Judul Buku</label>
-            <input type="text" class="form-control" id="judul_buku" name="judul_buku" value="<?= $buku['judul_buku'] ?>" required>
-        </div>
-        <div class="col-md-6">
-            <label for="pengarang" class="form-label">Pengarang</label>
-            <input type="text" class="form-control" id="pengarang" name="pengarang" value="<?= $buku['pengarang'] ?>" required>
-        </div>
-        <div class="col-md-6">
-            <label for="penerbit" class="form-label">Penerbit</label>
-            <input type="text" class="form-control" id="penerbit" name="penerbit" value="<?= $buku['penerbit'] ?>" required>
-        </div>
-        <div class="col-md-6">
-            <label for="tanggal_terbit" class="form-label">Tanggal Terbit</label>
-            <input type="date" class="form-control" id="tanggal_terbit" name="tanggal_terbit" value="<?= $buku['tanggal_terbit'] ?>" required>
-        </div>
-        <div class="col-md-6">
-            <label for="bahasa" class="form-label">Bahasa</label>
-            <select class="form-select" id="bahasa" name="bahasa" required>
-                <option value="Indonesia" <?= $buku['bahasa'] === 'Indonesia' ? 'selected' : '' ?>>Indonesia</option>
-                <option value="Inggris" <?= $buku['bahasa'] === 'Inggris' ? 'selected' : '' ?>>Inggris</option>
-                <option value="Jawa" <?= $buku['bahasa'] === 'Jawa' ? 'selected' : '' ?>>Jawa</option>
-                <option value="Arab" <?= $buku['bahasa'] === 'Arab' ? 'selected' : '' ?>>Arab</option>
-                <option value="Jepang" <?= $buku['bahasa'] === 'Jepang' ? 'selected' : '' ?>>Jepang</option>
-            </select>
-        </div>
-        <div class="col-md-6">
-            <label for="kategori" class="form-label">Kategori</label>
-            <select class="form-select" id="kategori" name="kategori" required>
-                <option value="Pemrograman" <?= $buku['kategori'] === 'Pemrograman' ? 'selected' : '' ?>>Pemrograman</option>
-                <option value="Jaringan dan Keamanan" <?= $buku['kategori'] === 'Jaringan dan Keamanan' ? 'selected' : '' ?>>Jaringan dan Keamanan</option>
-                <option value="Algoritma dan Struktur Data" <?= $buku['kategori'] === 'Algoritma dan Struktur Data' ? 'selected' : '' ?>>Algoritma dan Struktur Data</option>
-                <option value="Basis Data" <?= $buku['kategori'] === 'Basis Data' ? 'selected' : '' ?>>Basis Data</option>
-                <option value="Kecerdasan Buatan" <?= $buku['kategori'] === 'Kecerdasan Buatan' ? 'selected' : '' ?>>Kecerdasan Buatan</option>
-            </select>
-        </div>
-        <div class="col-md-6">
-            <label for="jumlah_halaman" class="form-label">Jumlah Halaman</label>
-            <input type="number" class="form-control" id="jumlah_halaman" name="jumlah_halaman" value="<?= $buku['jumlah_halaman'] ?>" required>
-        </div>
-        <div class="col-md-6">
-            <label for="stok" class="form-label">Stok</label>
-            <input type="number" class="form-control" id="stok" name="stok" value="<?= $buku['stok'] ?>" required>
-        </div>
-        <div class="col-md-6">
-            <label for="cover" class="form-label">Cover Buku</label>
-            <input type="file" class="form-control" id="cover" name="cover">
-            <p>Cover Saat Ini: <?= $buku['cover'] ? $buku['cover'] : 'Tidak ada' ?></p>
-        </div>
-        <div class="col-md-12">
-            <label for="deskripsi_buku" class="form-label">Deskripsi Buku</label>
-            <textarea class="form-control" id="deskripsi_buku" name="deskripsi_buku" rows="5" required><?= $buku['deskripsi_buku'] ?></textarea>
-        </div>
+<form method="POST" action="update_buku.php" enctype="multipart/form-data" class="space-y-5" novalidate>
+
+  <div class="grid gap-4 sm:grid-cols-2">
+    <div>
+      <label for="kode_buku" class="field-label">Kode Buku</label>
+      <input type="text" class="field cursor-not-allowed bg-slate-50 text-slate-500"
+             id="kode_buku" name="kode_buku" value="<?= $e($buku['kode_buku']) ?>" readonly />
+      <p class="field-hint">Kode buku tidak dapat diubah.</p>
     </div>
-    <div class="d-flex justify-content-end mt-4 rounded-3">
-        <button type="submit" class="btn btn-warning">Simpan Perubahan</button>
+
+    <div>
+      <label for="judul_buku" class="field-label">Judul Buku <span class="text-rose-500">*</span></label>
+      <input type="text" class="field" id="judul_buku" name="judul_buku"
+             value="<?= $e($buku['judul_buku']) ?>" data-autofocus required />
     </div>
+
+    <div>
+      <label for="pengarang" class="field-label">Pengarang <span class="text-rose-500">*</span></label>
+      <input type="text" class="field" id="pengarang" name="pengarang"
+             value="<?= $e($buku['pengarang']) ?>" required />
+    </div>
+
+    <div>
+      <label for="penerbit" class="field-label">Penerbit <span class="text-rose-500">*</span></label>
+      <input type="text" class="field" id="penerbit" name="penerbit"
+             value="<?= $e($buku['penerbit']) ?>" required />
+    </div>
+
+    <div>
+      <label for="tanggal_terbit" class="field-label">Tanggal Terbit <span class="text-rose-500">*</span></label>
+      <input type="date" class="field" id="tanggal_terbit" name="tanggal_terbit"
+             value="<?= $e($buku['tanggal_terbit']) ?>" required />
+    </div>
+
+    <div>
+      <label for="bahasa" class="field-label">Bahasa <span class="text-rose-500">*</span></label>
+      <select class="field-select" id="bahasa" name="bahasa" required>
+        <?php foreach (['Indonesia', 'Inggris', 'Jawa', 'Arab', 'Jepang'] as $b): ?>
+          <option value="<?= $b ?>" <?= $buku['bahasa'] === $b ? 'selected' : '' ?>><?= $b ?></option>
+        <?php endforeach; ?>
+      </select>
+    </div>
+
+    <div>
+      <label for="kategori" class="field-label">Kategori <span class="text-rose-500">*</span></label>
+      <select class="field-select" id="kategori" name="kategori" required>
+        <?php foreach (['Pemrograman', 'Jaringan dan Keamanan', 'Algoritma dan Struktur Data', 'Basis Data', 'Kecerdasan Buatan'] as $k): ?>
+          <option value="<?= $k ?>" <?= $buku['kategori'] === $k ? 'selected' : '' ?>><?= $k ?></option>
+        <?php endforeach; ?>
+      </select>
+    </div>
+
+    <div>
+      <label for="jumlah_halaman" class="field-label">Jumlah Halaman <span class="text-rose-500">*</span></label>
+      <input type="number" min="1" class="field" id="jumlah_halaman" name="jumlah_halaman"
+             value="<?= $e($buku['jumlah_halaman']) ?>" required />
+    </div>
+
+    <div>
+      <label for="stok" class="field-label">Stok <span class="text-rose-500">*</span></label>
+      <input type="number" min="0" class="field" id="stok" name="stok"
+             value="<?= $e($buku['stok']) ?>" required />
+    </div>
+
+    <div>
+      <label for="cover" class="field-label">Ganti Cover</label>
+      <input type="file" class="field file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100
+                     file:px-3 file:py-1.5 file:text-xs file:font-semibold
+                     file:text-slate-700 hover:file:bg-slate-200"
+             id="cover" name="cover" accept="image/*" />
+      <p class="field-hint">
+        Cover saat ini:
+        <?= !empty($buku['cover'])
+            ? htmlspecialchars((string) $buku['cover'])
+            : '<span class="italic">tidak ada</span>' ?>
+      </p>
+    </div>
+  </div>
+
+  <div>
+    <label for="deskripsi_buku" class="field-label">Deskripsi Buku <span class="text-rose-500">*</span></label>
+    <textarea class="field-textarea" id="deskripsi_buku" name="deskripsi_buku" rows="4" required><?= $e($buku['deskripsi_buku']) ?></textarea>
+  </div>
+
+  <div class="flex flex-wrap items-center justify-end gap-2.5 border-t border-slate-200 pt-5">
+    <button type="reset" class="btn-secondary btn-sm">Reset</button>
+    <button type="submit" class="btn-primary btn-sm">
+      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+      </svg>
+      Simpan Perubahan
+    </button>
+  </div>
 </form>

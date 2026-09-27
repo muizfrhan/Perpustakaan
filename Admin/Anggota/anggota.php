@@ -1,5 +1,13 @@
 <?php
+/**
+ * Data Anggota
+ *
+ * QUERY, URL FILTER, ID MODAL, dan nama fungsi TIDAK BERUBAH.
+ * Yang diubah hanya markup + CSS.
+ */
 require_once '../../Config/koneksi.php';
+
+$menuAktif = 'anggota';
 include '../Layouts/header.php';
 
 // Get the filter for member status
@@ -23,7 +31,6 @@ $totalResult = $totalQuery->fetch(PDO::FETCH_ASSOC);
 $totalRows = $totalResult['total'];
 $totalPages = ceil($totalRows / $limit);
 
-
 // Ambil data sesuai halaman dan filter status anggota dan urutan abjad
 $result = $conn->prepare("
     SELECT * FROM anggota
@@ -35,245 +42,226 @@ $result = $conn->prepare("
 $result->bindValue(':limit', $limit, PDO::PARAM_INT);
 $result->bindValue(':offset', $offset, PDO::PARAM_INT);
 $result->execute();
+
+$filterAktif = [
+    'semua'       => 'Semua Anggota',
+    'aktif'       => 'Aktif',
+    'tidak_aktif' => 'Tidak Aktif',
+];
 ?>
 
-<section class="home-section">
-  <div class="mt-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <!-- Judul -->
-      <h2 class="fw-bold text-dark mb-0">Data Anggota</h2>
+<!-- ================= HEADER HALAMAN ================= -->
+<section class="flex flex-wrap items-end justify-between gap-4">
+  <div>
+    <h1 class="text-title">Data Anggota</h1>
+    <p class="text-muted mt-1">
+      <?= number_format((int) $totalRows, 0, ',', '.') ?> anggota terdaftar
+      &middot; filter: <?= htmlspecialchars($filterAktif[$memberFilter] ?? 'Semua Anggota') ?>
+    </p>
+  </div>
 
-      <!-- Bagian Tombol dan Pencarian -->
-      <div class="d-flex align-items-between gap-3">
-        <!-- Filter Anggota -->
-        <div class="dropdown rounded-3">
-          <button class="btn btn-light border d-flex align-items-center"
-            type="button" id="memberFilterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="bx bx-filter-alt me-2"></i> Filter
-          </button>
-          <ul class="dropdown-menu" aria-labelledby="memberFilterDropdown">
-            <li>
-              <a class="dropdown-item d-flex align-items-center <?= $memberFilter === 'semua' ? 'active' : ''; ?>" href="?member_filter=semua">
-                <i class="bx bx-check-circle me-2"></i> Semua
-              </a>
-            </li>
-            <li>
-              <a class="dropdown-item d-flex align-items-center <?= $memberFilter === 'aktif' ? 'active' : ''; ?>" href="?member_filter=aktif">
-                <i class="bx bx-user-check me-2"></i> Aktif
-              </a>
-            </li>
-            <li>
-              <a class="dropdown-item d-flex align-items-center <?= $memberFilter === 'tidak_aktif' ? 'active' : ''; ?>" href="?member_filter=tidak_aktif">
-                <i class="bx bx-user-x me-2"></i> Tidak Aktif
-              </a>
-            </li>
-          </ul>
-        </div>
+  <div class="flex flex-wrap items-center gap-2">
+    <!-- Filter -->
+    <div class="relative" data-dropdown>
+      <button type="button" data-dropdown-toggle="memberFilterDropdown"
+              class="btn-secondary btn-sm gap-2">
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.9" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z" />
+        </svg>
+        Filter
+        <svg class="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+        </svg>
+      </button>
 
-        <!-- Input Pencarian -->
-        <div class="input-group rounded-3" style="max-width: 200px;">
-          <span class="input-group-text bg-primary text-white"><i class="fas fa-search"></i></span>
-          <input type="text" class="form-control" id="search" placeholder="Cari Anggota..." onkeyup="searchTable()">
-        </div>
-
-        <!-- Tombol Tambah Anggota -->
-        <div>
-          <button class="btn btn-primary shadow-sm rounded-3" data-bs-toggle="modal" data-bs-target="#tambahAnggotaModal">
-            <i class="fas fa-plus"></i> Tambah
-          </button>
-        </div>
+      <div id="memberFilterDropdown" data-dropdown
+           class="absolute right-0 z-30 mt-2 w-52 overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-lift">
+        <?php foreach (['semua' => 'Semua', 'aktif' => 'Aktif', 'tidak_aktif' => 'Tidak Aktif'] as $key => $label): ?>
+          <a href="?member_filter=<?= $key ?>"
+             class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition
+                    <?= $memberFilter === $key ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-50' ?>">
+            <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="<?= $memberFilter === $key ? '2.2' : '1.7' ?>" stroke="currentColor">
+              <?php if ($memberFilter === $key): ?>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <?php else: ?>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9.75L12 13.5l3.75-3.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <?php endif; ?>
+            </svg>
+            <?= $label ?>
+          </a>
+        <?php endforeach; ?>
       </div>
     </div>
 
-    <div class="border border-secondary border-opacity-75 p-2 mb-2 rounded-3 overflow-hidden">
-      <table class="table table-hover align-middle" id="anggotaTable">
-        <thead class="bg-primary text-white">
-          <tr>
-            <th class="text-center">NIM</th>
-            <th>Nama</th>
-            <th>NO. Telp</th>
-            <th>Jenis Kelamin</th>
-            <th>Jurusan</th>
-            <th>Kelas</th>
-            <th>Tanggal Lahir</th>
-            <th>Status</th>
-            <th class="text-center">Aksi</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php while ($row = $result->fetch(PDO::FETCH_ASSOC)): ?>
-            <tr style="font-size: 15px;">
-              <td class="text-center"><?= $row['nim']; ?></td>
-              <td style="font-weight: 600;"><?= $row['nama']; ?></td>
-              <td><?= $row['no_telp']; ?></td>
-              <td><?= $row['jenis_kelamin']; ?></td>
-              <td><?= $row['jurusan']; ?></td>
-              <td><?= $row['kelas']; ?></td>
-              <td><?= $row['tgl_lahir']; ?></td>
-              <td>
-                <?php if ($row['status_mhs'] == 'Aktif') { ?>
-                  <span class="badge rounded-4" style="background-color:  #e8f8e8; color: #38c172; padding: 10px 10px; font-weight: bold; display: inline-block; width: 100px; height: 28px; text-align: center;">Aktif</span>
-                <?php } else { ?>
-                  <span class="badge rounded-4" style="background-color: #e2e3e5; color: #6c757d; padding: 10px 10px; font-weight: bold; display: inline-block; width: 100px; height: 28px; text-align: center;">Tidak Aktif</span>
-                <?php } ?>
-              </td>
-
-
-              <td class="text-center">
-                <button class="btn btn-warning btn-sm rounded-2" data-bs-toggle="modal" data-bs-target="#editAnggotaModal" onclick="loadEditForm('<?= $row['nim']; ?>')">
-                  <i class="fas fa-edit"></i> Edit
-                </button>
-              </td>
-            </tr>
-          <?php endwhile; ?>
-        </tbody>
-      </table>
-
-      <!-- Navigasi Previous dan Next -->
-      <nav class="mt-4">
-        <ul class="pagination d-flex justify-content-between align-items-center me-4 ms-4">
-          <!-- Tombol Previous -->
-          <li class="page-item <?= ($page <= 1) ? 'disabled' : ''; ?>">
-            <a class="page-link" href="?page=<?= $page - 1; ?>" aria-label="Previous">
-              <span aria-hidden="true">&laquo; Previous</span>
-            </a>
-          </li>
-
-          <!-- Nomor Halaman -->
-          <div class="d-flex justify-content-center flex-grow-1">
-            <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-              <li class="page-item <?= ($i == $page) ? 'active' : ''; ?>">
-                <a class="page-link" href="?page=<?= $i; ?>"><?= $i; ?></a>
-              </li>
-            <?php endfor; ?>
-          </div>
-
-          <!-- Tombol Next -->
-          <li class="page-item <?= ($page >= $totalPages) ? 'disabled' : ''; ?>">
-            <a class="page-link" href="?page=<?= $page + 1; ?>" aria-label="Next">
-              <span aria-hidden="true">Next &raquo;</span>
-            </a>
-          </li>
-        </ul>
-      </nav>
+    <!-- Pencarian -->
+    <div class="relative w-full sm:w-56">
+      <svg class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+           fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+      </svg>
+      <input type="search" id="search" data-table-search="#anggotaTable" autocomplete="off"
+             class="field field-sm pl-10" placeholder="Cari anggota..." />
     </div>
 
-    <!-- Modal Tambah Anggota -->
-    <div class="modal fade" id="tambahAnggotaModal" tabindex="-1" aria-labelledby="tambahAnggotaLabel" aria-hidden="true">
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header bg-primary text-white">
-            <h5 class="modal-title" id="tambahAnggotaLabel">Tambah Anggota Baru</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body" id="modalContent">
-            <!-- Form akan dimuat di sini menggunakan AJAX -->
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Modal Edit Anggota -->
-    <div class="modal fade" id="editAnggotaModal" tabindex="-1" aria-labelledby="editAnggotaLabel" aria-hidden="true">
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header bg-warning text-white">
-            <h5 class="modal-title" id="editAnggotaLabel">Edit Data Anggota</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body" id="editModalContent">
-            <!-- Form akan dimuat di sini menggunakan AJAX -->
-          </div>
-        </div>
-      </div>
-    </div>
+    <!-- Tambah -->
+    <button type="button" data-modal-open="tambahAnggotaModal" class="btn-primary btn-sm">
+      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+      </svg>
+      Tambah
+    </button>
+  </div>
 </section>
 
+<!-- ================= TABEL ================= -->
+<section class="card-base mt-6 overflow-hidden">
+  <div class="overflow-x-auto">
+    <table class="table-base" id="anggotaTable">
+      <thead>
+        <tr>
+          <th class="text-center">NIM</th>
+          <th>Nama</th>
+          <th>No. Telp</th>
+          <th>Jenis Kelamin</th>
+          <th>Jurusan</th>
+          <th>Kelas</th>
+          <th>Tanggal Lahir</th>
+          <th>Status</th>
+          <th class="text-center">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php if (!$totalRows): ?>
+          <tr>
+            <td colspan="9" class="py-12 text-center text-slate-500">
+              Tidak ada anggota yang cocok dengan filter ini.
+            </td>
+          </tr>
+        <?php endif; ?>
+
+        <?php while ($row = $result->fetch(PDO::FETCH_ASSOC)): ?>
+          <tr>
+            <td class="text-center">
+              <code class="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] text-slate-600"><?= htmlspecialchars((string) $row['nim']) ?></code>
+            </td>
+            <td class="whitespace-nowrap font-semibold text-slate-900"><?= htmlspecialchars($row['nama']) ?></td>
+            <td class="whitespace-nowrap"><?= htmlspecialchars((string) ($row['no_telp'] ?: '-')) ?></td>
+            <td class="whitespace-nowrap"><?= htmlspecialchars($row['jenis_kelamin']) ?></td>
+            <td class="whitespace-nowrap"><?= htmlspecialchars($row['jurusan']) ?></td>
+            <td class="whitespace-nowrap"><?= htmlspecialchars($row['kelas']) ?></td>
+            <td class="whitespace-nowrap"><?= date('d/m/Y', strtotime($row['tgl_lahir'])) ?></td>
+            <td>
+              <?php if ($row['status_mhs'] == 'Aktif'): ?>
+                <span class="badge-safe">Aktif</span>
+              <?php else: ?>
+                <span class="badge-empty">Tidak Aktif</span>
+              <?php endif; ?>
+            </td>
+            <td class="text-center">
+              <button type="button" data-modal-open="editAnggotaModal"
+                      onclick="loadEditForm('<?= htmlspecialchars((string) $row['nim']) ?>')"
+                      class="btn-secondary btn-sm">
+                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+                </svg>
+                Edit
+              </button>
+            </td>
+          </tr>
+        <?php endwhile; ?>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <?php if ($totalPages > 1): ?>
+    <nav class="flex items-center justify-between gap-4 border-t border-slate-200 px-5 py-3.5">
+      <p class="text-muted">
+        Halaman <span class="font-semibold text-slate-700"><?= $page ?></span> dari <?= (int) $totalPages ?>
+      </p>
+
+      <div class="flex items-center gap-1.5">
+        <a href="?page=<?= $page - 1; ?>&member_filter=<?= $memberFilter ?>"
+           class="btn-secondary btn-sm <?= $page <= 1 ? 'pointer-events-none opacity-40' : '' ?>">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+          </svg>
+          Sebelumnya
+        </a>
+
+        <a href="?page=<?= $page + 1; ?>&member_filter=<?= $memberFilter ?>"
+           class="btn-secondary btn-sm <?= $page >= $totalPages ? 'pointer-events-none opacity-40' : '' ?>">
+          Berikutnya
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+          </svg>
+        </a>
+      </div>
+    </nav>
+  <?php endif; ?>
+</section>
+
+<!-- ================= MODAL TAMBAH ================= -->
+<div id="tambahAnggotaModal" data-modal role="dialog" aria-modal="true" aria-labelledby="tambahAnggotaLabel"
+     class="fixed inset-0 z-50 hidden items-end justify-center sm:items-center sm:p-6">
+  <div data-modal-backdrop class="absolute inset-0 bg-slate-900/50 opacity-0 backdrop-blur-sm transition-opacity duration-300"></div>
+  <div class="relative flex max-h-[92vh] w-full max-w-2xl translate-y-6 flex-col overflow-hidden rounded-t-3xl bg-white shadow-lift transition-all duration-300 sm:translate-y-0 sm:rounded-3xl">
+    <div class="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+      <h2 class="text-base font-semibold text-slate-900" id="tambahAnggotaLabel">Tambah Anggota Baru</h2>
+      <button type="button" data-modal-close class="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700" aria-label="Tutup">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <div class="overflow-y-auto" id="modalContent"></div>
+  </div>
+</div>
+
+<!-- ================= MODAL EDIT ================= -->
+<div id="editAnggotaModal" data-modal role="dialog" aria-modal="true" aria-labelledby="editAnggotaLabel"
+     class="fixed inset-0 z-50 hidden items-end justify-center sm:items-center sm:p-6">
+  <div data-modal-backdrop class="absolute inset-0 bg-slate-900/50 opacity-0 backdrop-blur-sm transition-opacity duration-300"></div>
+  <div class="relative flex max-h-[92vh] w-full max-w-2xl translate-y-6 flex-col overflow-hidden rounded-t-3xl bg-white shadow-lift transition-all duration-300 sm:translate-y-0 sm:rounded-3xl">
+    <div class="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+      <h2 class="text-base font-semibold text-slate-900" id="editAnggotaLabel">Edit Anggota</h2>
+      <button type="button" data-modal-close class="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700" aria-label="Tutup">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <div class="overflow-y-auto" id="editModalContent"></div>
+  </div>
+</div>
+
 <script>
-  // Ajax Edit Anggota
+  /* loadEditForm - nama fungsi & endpoint DIJAGA. */
   function loadEditForm(nim) {
-    const modalContent = document.getElementById('editModalContent');
-    modalContent.innerHTML = '<p class="text-center text-muted">Loading...</p>';
-    fetch(`edit_anggota.php?nim=${nim}`)
-      .then(response => response.text())
-      .then(data => {
-        modalContent.innerHTML = data;
-      })
-      .catch(error => {
-        modalContent.innerHTML = '<p class="text-danger">Gagal memuat data</p>';
+    const box = document.getElementById('editModalContent');
+    if (!box) return;
+
+    box.innerHTML = '<div class="flex items-center justify-center gap-3 px-6 py-20 text-slate-400">'
+      + '<svg class="h-6 w-6 animate-spin" fill="none" viewBox="0 0 24 24">'
+      + '<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>'
+      + '<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg>'
+      + '<span class="text-sm">Memuat data...</span></div>';
+
+    fetch('edit_anggota.php?nim=' + encodeURIComponent(nim))
+      .then((r) => r.text())
+      .then((html) => { box.innerHTML = html; })
+      .catch(() => {
+        box.innerHTML = '<p class="px-6 py-16 text-center text-sm text-slate-500">Gagal memuat data anggota.</p>';
       });
   }
 
-  // Ajax Tambah Anggota
-  document.addEventListener('DOMContentLoaded', function() {
-    const modal = document.getElementById('tambahAnggotaModal');
-    const modalContent = document.getElementById('modalContent');
-    modal.addEventListener('show.bs.modal', function() {
-      fetch('add_anggota.php')
-        .then(response => response.text())
-        .then(data => {
-          modalContent.innerHTML = data;
-        })
-        .catch(error => {
-          modalContent.innerHTML = '<p class="text-danger">Gagal memuat form</p>';
-        });
-    });
-  });
-
-  // Daftar Kelas
-  document.addEventListener('DOMContentLoaded', function() {
-    const modal = document.getElementById('tambahAnggotaModal');
-    const modalContent = document.getElementById('modalContent');
-
-    modal.addEventListener('show.bs.modal', function() {
-      fetch('add_anggota.php')
-        .then(response => response.text())
-        .then(data => {
-          modalContent.innerHTML = data;
-
-          // Tambahkan event listener untuk dropdown jurusan dan kelas
-          const jurusanToKelas = {
-            "D4 Teknologi Rekayasa Perangkat Lunak": ["23A1"],
-            "S1 Teknik Informatika": ["23A1", "23A2", "23A3", "23A4", "23A5", "23A6"],
-            "S1 Sistem Informasi": ["23A1", "23A2"],
-            "D3 Teknik Komputer": ["23A1"]
-          };
-
-          const jurusanDropdown = document.getElementById('jurusan');
-          const kelasDropdown = document.getElementById('kelas');
-
-          if (jurusanDropdown && kelasDropdown) {
-            jurusanDropdown.addEventListener('change', function() {
-              const jurusan = this.value;
-
-              // Reset opsi dropdown kelas
-              kelasDropdown.innerHTML = '<option value="" disabled selected>Pilih Kelas</option>';
-
-              if (jurusanToKelas[jurusan]) {
-                jurusanToKelas[jurusan].forEach(kelas => {
-                  const option = document.createElement('option');
-                  option.value = kelas;
-                  option.textContent = kelas;
-                  kelasDropdown.appendChild(option);
-                });
-              }
-            });
-          }
-        })
-        .catch(error => {
-          modalContent.innerHTML = '<p class="text-danger">Gagal memuat form</p>';
-          console.error('Error:', error);
-        });
-    });
-  });
-
-  // Fitur Searching
+  /* searchTable - dipertahankan sebagai alias agar tidak merusak pemanggil lama. */
   function searchTable() {
-    let input = document.getElementById("search").value.toLowerCase();
-    let rows = document.querySelectorAll("#anggotaTable tbody tr");
-    rows.forEach((row) => {
-      let text = row.innerText.toLowerCase();
-      row.style.display = text.includes(input) ? "" : "none";
-    });
+    const input = document.getElementById('search');
+    if (!input) return;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
   }
 </script>
+
+<?php include '../Layouts/footer.php'; ?>

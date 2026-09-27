@@ -1,4 +1,11 @@
 <?php
+/**
+ * Pengembalian Cepat (halaman proses).
+ *
+ * Seluruh chrome (head, sidebar, topbar) sekarang memakai shell bersama
+ * Admin/Layouts/header.php + footer.php. Logika PHP, ID elemen, dan nama
+ * fungsi TIDAK BERUBAH.
+ */
 session_start();  // Memastikan sesi dimulai
 require_once '../../Config/koneksi.php';  // Menghubungkan ke file koneksi database
 
@@ -101,219 +108,149 @@ $peminjaman = $conn->query("
     FROM peminjaman 
     WHERE kode_pinjam NOT IN (SELECT kode_pinjam FROM pengembalian)
 ")->fetchAll(PDO::FETCH_ASSOC);
+
+$menuAktif = 'pengembalian';
+include '../Layouts/header.php';
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
+<!-- ================= HEADER HALAMAN ================= -->
+<section class="flex flex-wrap items-end justify-between gap-4">
+  <div>
+    <h1 class="text-title">Proses Pengembalian</h1>
+    <p class="text-muted mt-1">
+      <?= number_format(count($peminjaman), 0, ',', '.') ?> peminjaman belum dikembalikan
+    </p>
+  </div>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin</title>
+  <a href="pengembalian.php" class="btn-secondary btn-sm">
+    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+    </svg>
+    Kembali ke Data Pengembalian
+  </a>
+</section>
 
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Flatpickr Stylesheet -->
-    <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <!-- Custom CSS -->
-    <script src="../../Assets/scripts/header.js" defer></script>
-    <link rel="stylesheet" href="../../Assets/css/header.css">
-    <link rel="stylesheet" href="../../Assets/css/dashboard.css">
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <style>
-        .calendar {
-            background: #fff;
-            border-radius: 25px;
-            width: 800px;
-            padding: 20px;
-        }
+<!-- ================= FORM PROSES ================= -->
+<section class="card-base mt-6">
+  <div class="border-b border-slate-200 px-6 py-4">
+    <h2 class="text-section">Form Pengembalian</h2>
+    <p class="text-muted mt-1">Masukkan kode peminjaman, lalu tentukan kondisi buku saat dikembalikan.</p>
+  </div>
 
-        .calendar-header h2 {
-            font-size: 1.5rem;
-            margin: 0;
-        }
+  <div class="p-6">
+    <form action="add_pengembalian.php" method="POST" class="max-w-xl space-y-5" novalidate>
 
-        .calendar-header button {
-            background: #007bff;
-            color: #fff;
-            border: none;
-            padding: 10px 10px;
-            border-radius: 100px;
-            cursor: pointer;
-        }
-
-        .calendar-header button:hover {
-            background: #0056b3;
-        }
-
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 5px;
-            text-align: center;
-        }
-
-        .day {
-            padding: 11px 0;
-            background: #e9ecef;
-            border-radius: 25px;
-            transition: background 0.3s ease, transform 0.3s ease;
-        }
-
-        .day:hover {
-            background: #007bff;
-            color: #fff;
-            transform: scale(1.1);
-        }
-
-        .day-header {
-            font-weight: bold;
-            color: #495057;
-        }
-
-        .current-day {
-            background: #007bff;
-            color: #fff;
-        }
-
-        .autocomplete-item {
-            padding: 10px;
-            border-bottom: 1px solid #ddd;
-            cursor: pointer;
-        }
-
-        .autocomplete-item:hover {
-            background-color: #f1f1f1;
-        }
-
-        #search_results {
-            border: 1px solid #ddd;
-            max-height: 200px;
-            overflow-y: auto;
-            display: none;
-        }
-    </style>
-</head>
-
-<body>
-    <div class="sidebar shadow ms">
-        <div class="logo-details mb-4">
-            <div class="logo_name">
-                <img src="../../Assets/img/LogoPusaku.png" alt="" class="logo-img">
-            </div>
-            <i class='bx bx-menu' id="btn"></i>
+      <!-- Pencarian Kode Peminjaman -->
+      <div class="autocomplete">
+        <label for="kode_pinjam" class="field-label">Kode Peminjaman <span class="text-rose-500">*</span></label>
+        <div class="relative">
+          <svg class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+               fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+          </svg>
+          <input type="text" id="kode_pinjam" name="kode_pinjam" class="input-icon"
+                 placeholder="Contoh: PN001" autocomplete="off" data-autofocus required />
         </div>
-        <ul class="nav-list">
-            <li>
-                <a href="../Dashboard/dashboard.php">
-                    <i class='bx bx-grid-alt'></i>
-                    <span class="links_name">Dashboard</span>
-                </a>
-                <span class="tooltip">Dashboard</span>
-            </li>
-            <li>
-                <a href="../Anggota/anggota.php" class="active">
-                    <i class='bx bx-user'></i>
-                    <span class="links_name">Anggota</span>
-                </a>
-                <span class="tooltip">Anggota</span>
-            </li>
-            <li>
-                <a href="../Buku/buku.php">
-                    <i class='bx bx-book'></i>
-                    <span class="links_name">Buku</span>
-                </a>
-                <span class="tooltip">Buku</span>
-            </li>
-            <li>
-                <a href="../Peminjaman/peminjaman.php">
-                    <i class='bx bx-book-add'></i>
-                    <span class="links_name">Peminjaman</span>
-                </a>
-                <span class="tooltip">Peminjaman</span>
-            </li>
-            <li>
-                <a href="../Pengembalian/pengembalian.php">
-                    <i class='bx bx-book-bookmark'></i>
-                    <span class="links_name">Pengembalian</span>
-                </a>
-                <span class="tooltip">Pengembalian</span>
-            </li>
-        </ul>
-    </div>
-    <div class="container">
-        <form action="add_pengembalian.php" method="POST">
-            <!-- Pencarian Kode Peminjaman -->
-            <div class="mb-3">
-                <label for="kode_pinjam" class="form-label">Kode Peminjaman</label>
-                <input type="text" id="kode_pinjam" name="kode_pinjam" class="form-control" required>
-                <div id="search_results" class="mt-2"></div> <!-- Menampilkan hasil pencarian -->
-            </div>
+        <div id="search_results" class="autocomplete-panel"></div> <!-- Menampilkan hasil pencarian -->
+        <p class="field-hint">Ketik kode peminjaman atau nama anggota.</p>
+      </div>
 
-            <!-- Kondisi Buku -->
-            <div class="mb-3">
-                <label for="kondisi_buku" class="form-label">Kondisi Buku</label>
-                <select name="kondisi_buku" id="kondisi_buku" class="form-select" required>
-                    <option value="bagus">Bagus</option>
-                    <option value="rusak">Rusak</option>
-                    <option value="hilang">Hilang</option>
-                </select>
-            </div>
+      <!-- Kondisi Buku -->
+      <div>
+        <label for="kondisi_buku" class="field-label">Kondisi Buku <span class="text-rose-500">*</span></label>
+        <select name="kondisi_buku" id="kondisi_buku" class="field-select" required>
+          <option value="bagus">Bagus</option>
+          <option value="rusak">Rusak</option>
+          <option value="hilang">Hilang</option>
+        </select>
+      </div>
 
-            <button type="submit" class="btn btn-primary">Proses Pengembalian</button>
-        </form>
-    </div>
+      <div class="alert-neutral">
+        <svg class="mt-0.5 h-5 w-5 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke-width="1.9" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+        </svg>
+        <p>Denda keterlambatan dihitung otomatis, ditambah denda tambahan bila buku rusak atau hilang.</p>
+      </div>
 
-    <script>
-        // Fungsi untuk menangani autocomplete
-        function setupAutocomplete() {
-            const inputKodePinjam = document.getElementById('kode_pinjam');
-            const searchResults = document.getElementById('search_results');
+      <div class="flex flex-wrap items-center gap-2.5 border-t border-slate-200 pt-5">
+        <button type="submit" class="btn-primary btn-sm">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3m-9-6h.01" />
+          </svg>
+          Proses Pengembalian
+        </button>
+      </div>
+    </form>
+  </div>
+</section>
 
-            inputKodePinjam.addEventListener('input', function() {
-                const query = inputKodePinjam.value;
+<script>
+  /* Fungsi untuk menangani autocomplete - nama fungsi DIJAGA. */
+  function setupAutocomplete() {
+      const inputKodePinjam = document.getElementById('kode_pinjam');
+      const searchResults = document.getElementById('search_results');
 
-                if (query.length > 0) {
-                    fetch(`search_kode_pinjam.php?kode_pinjam=${query}`)
-                        .then(response => response.json())
-                        .then(data => {
-                            let html = '';
-                            if (data.length > 0) {
-                                data.forEach(item => {
-                                    html += `<div class="autocomplete-item" onclick="selectKodePinjam('${item.kode_pinjam}', '${item.nama_anggota}')">
-                                    <strong> ${item.kode_pinjam} - </strong> ${item.nama_anggota} <br>
-                                </div>`;
-                                });
-                            } else {
-                                html = '<div class="autocomplete-item">Tidak ada hasil yang ditemukan</div>';
-                            }
-                            searchResults.innerHTML = html;
-                            searchResults.style.display = 'block';
-                        });
-                } else {
-                    searchResults.innerHTML = '';
-                    searchResults.style.display = 'none';
-                }
-            });
+      if (!inputKodePinjam || !searchResults) return;
 
-            // Fungsi untuk memilih item dari hasil autocomplete
-            window.selectKodePinjam = function(kodePinjam, namaAnggota) {
-                inputKodePinjam.value = kodePinjam;
-                searchResults.innerHTML = '';
-                searchResults.style.display = 'none';
-            };
-        }
+      const tutup = () => {
+          searchResults.innerHTML = '';
+          searchResults.classList.add('hidden');
+      };
 
-        // Panggil fungsi setupAutocomplete saat halaman dimuat
-        document.addEventListener('DOMContentLoaded', setupAutocomplete);
-        console.log('Autocomplete script berjalan!');
-        const inputKodePinjam = document.getElementById('kode_pinjam');
-        if (inputKodePinjam) {
-            console.log('Elemen ditemukan:', inputKodePinjam);
-        } else {
-            console.log('Elemen #kode_pinjam tidak ditemukan!');
-        }
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+      inputKodePinjam.addEventListener('input', function () {
+          const query = inputKodePinjam.value;
+
+          if (query.length > 0) {
+              fetch(`search_kode_pinjam.php?kode_pinjam=${query}`)
+                  .then(response => response.json())
+                  .then(data => {
+                      let html = '';
+                      if (data.length > 0) {
+                          data.forEach(item => {
+                              html += `<div class="autocomplete-item" data-kode="${item.kode_pinjam}" data-nama="${item.nama_anggota}">
+                              <strong>${item.kode_pinjam}</strong><span class="text-slate-400">-</span>${item.nama_anggota}
+                              </div>`;
+                          });
+                      } else {
+                          html = '<div class="autocomplete-empty">Tidak ada hasil yang ditemukan</div>';
+                      }
+                      searchResults.innerHTML = html;
+                      searchResults.classList.remove('hidden');
+
+                      searchResults.querySelectorAll('[data-kode]').forEach(row => {
+                          row.addEventListener('mousedown', (ev) => {
+                              ev.preventDefault();
+                              selectKodePinjam(row.dataset.kode, row.dataset.nama);
+                          });
+                      });
+                  });
+          } else {
+              tutup();
+          }
+      });
+
+      // Tutup saat klik di luar atau menekan Escape.
+      document.addEventListener('click', (ev) => {
+          if (!searchResults.contains(ev.target) && ev.target !== inputKodePinjam) tutup();
+      });
+      inputKodePinjam.addEventListener('keydown', (ev) => {
+          if (ev.key === 'Escape') tutup();
+      });
+  }
+
+  /* Fungsi untuk memilih item dari hasil autocomplete - nama fungsi DIJAGA. */
+  window.selectKodePinjam = function (kodePinjam, namaAnggota) {
+      const inputKodePinjam = document.getElementById('kode_pinjam');
+      const searchResults = document.getElementById('search_results');
+      if (inputKodePinjam) inputKodePinjam.value = kodePinjam;
+      if (searchResults) {
+          searchResults.innerHTML = '';
+          searchResults.classList.add('hidden');
+      }
+  };
+
+  /* Panggil setupAutocomplete saat halaman dimuat */
+  document.addEventListener('DOMContentLoaded', setupAutocomplete);
+</script>
+
+<?php include '../Layouts/footer.php'; ?>

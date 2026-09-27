@@ -27,7 +27,11 @@ foreach ($data as $row) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cetak Semua Pengembalian</title>
+  <title>Cetak Semua Pengembalian - PUSAKU</title>
+      <!-- Favicon PUSAKU -->
+      <link rel="icon" type="image/svg+xml" href="../../Assets/logo/favicon.svg" />
+      <link rel="icon" type="image/png" sizes="32x32" href="../../Assets/logo/favicon-32.png" />
+      <link rel="icon" type="image/png" sizes="16x16" href="../../Assets/logo/favicon-16.png" />
   <style>
     body {
       font-family: Arial, sans-serif;

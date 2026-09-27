@@ -1,0 +1,29 @@
+{
+  "name": "perpustakaan",
+  "version": "1.0.0",
+  "description": "> Sistem Informasi Perpustakaan Modern untuk Universitas",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "build:css": "tailwindcss -i ./Assets/css/pusaku.src.css -o ./Assets/css/pusaku.css --minify",
+    "watch:css": "tailwindcss -i ./Assets/css/pusaku.src.css -o ./Assets/css/pusaku.css --watch",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/muizfrhan/Perpustakaan.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/muizfrhan/Perpustakaan/issues"
+  },
+  "homepage": "https://github.com/muizfrhan/Perpustakaan#readme",
+  "devDependencies": {
+    "tailwindcss": "^3.4.17"
+  }
+}

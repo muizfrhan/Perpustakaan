@@ -1,5 +1,6 @@
 <?php
-require_once '../../Config/koneksi.php';
+require_once __DIR__ . '/../../Config/bootstrap.php';
+require_once __DIR__ . '/../../Config/koneksi.php';
 
 if (isset($_GET['id_petugas'])) {
     $id_petugas = $_GET['id_petugas'];
@@ -28,7 +29,11 @@ if (isset($_GET['id_petugas'])) {
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>ID Card Petugas</title>
+            <title>ID Card Petugas - PUSAKU</title>
+      <!-- Favicon PUSAKU -->
+      <link rel="icon" type="image/svg+xml" href="../../Assets/logo/favicon.svg" />
+      <link rel="icon" type="image/png" sizes="32x32" href="../../Assets/logo/favicon-32.png" />
+      <link rel="icon" type="image/png" sizes="16x16" href="../../Assets/logo/favicon-16.png" />
             <style>
                 /* Google Fonts */
                 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
@@ -84,6 +89,23 @@ if (isset($_GET['id_petugas'])) {
                     border: 4px solid #fff;
                     margin-bottom: 15px;
                     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+                    object-fit: cover;
+                }
+
+                /* Dipakai saat petugas belum punya foto. */
+                .id-card-fallback {
+                    width: 120px;
+                    height: 120px;
+                    border-radius: 50%;
+                    border: 4px solid #fff;
+                    margin: 0 auto 15px;
+                    background: rgba(255, 255, 255, 0.25);
+                    color: #fff;
+                    font-size: 44px;
+                    font-weight: 700;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
                 }
 
                 .id-card-body h2 {
@@ -153,8 +175,25 @@ if (isset($_GET['id_petugas'])) {
                 </div>
 
                 <!-- Body -->
-                <div class="id-card-body">
-                    <img src="../../Assets/uploads/<?= $profil_gambar; ?>" alt="Profil Petugas">
+                  <div class="id-card-body">
+                      <?php
+                      // Foto bisa di Assets/uploads/profil/<nama acak> (format
+                      // baru) atau Assets/uploads/<nama asli> (format lama).
+                      $fotoCard = \App\Services\Profil::urlFoto($profil_gambar, '../../');
+                      if ($fotoCard === null && !empty($profil_gambar)) {
+                          $cobaLama = '../../Assets/uploads/' . basename($profil_gambar);
+                          if (is_file(__DIR__ . '/../../Assets/uploads/' . basename($profil_gambar))) {
+                              $fotoCard = $cobaLama;
+                          }
+                      }
+                      if ($fotoCard): ?>
+                        <img src="<?= $fotoCard ?>" alt="Profil Petugas">
+                      <?php else: ?>
+                        <div class="id-card-fallback">
+                          <?= strtoupper(mb_substr((string) $nama_petugas, 0, 1)) ?>
+                        </div>
+                      <?php endif; ?>
+
                     <h2><?= $nama_petugas; ?></h2>
                     <p><?= $username; ?></p>
                     <p><?= $no_telp; ?></p>

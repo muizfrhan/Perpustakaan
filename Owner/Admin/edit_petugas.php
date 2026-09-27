@@ -1,13 +1,25 @@
 <?php
-require_once '../../Config/koneksi.php';
+/**
+ * Form Edit Petugas (fragment AJAX - Panel Owner).
+ *
+ * Dimuat ke dalam #editModalContent oleh admin.php.
+ * action="edit_petugas.php?id_petugas=..." dan nama field
+ * TIDAK BERUBAH agar tetap kompatibel dengan proses update di bawah.
+ */
+require_once __DIR__ . '/../../Config/bootstrap.php';
+require_once __DIR__ . '/../../Config/koneksi.php';
+
+// Wajib login: halaman ini memuat/mengubah data perpustakaan.
+require_owner();
+
+
+use App\Services\Profil;
 
 // Ambil data petugas berdasarkan ID
 $id_petugas = isset($_GET['id_petugas']) ? $_GET['id_petugas'] : null;
 if (!$id_petugas) {
-    echo "<script>
-            alert('ID petugas tidak ditemukan.');
-            window.location.href = 'admin.php';
-        </script>";
+    flash('danger', 'ID petugas tidak ditemukan.');
+    header('Location: admin.php');
     exit;
 }
 
@@ -17,14 +29,14 @@ try {
     $petugas = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$petugas) {
-        echo "<script>
-              alert('Data petugas tidak ditemukan.');
-              window.location.href = 'admin.php';
-          </script>";
+        flash('danger', 'Data petugas tidak ditemukan.');
+        header('Location: admin.php');
         exit;
     }
 } catch (PDOException $e) {
-    echo "Error: " . $e->getMessage();
+    flash('danger', 'Terjadi kesalahan: ' . $e->getMessage());
+    header('Location: admin.php');
+    exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -36,76 +48,121 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $profil_gambar = $petugas['profil_gambar']; // Default gambar sebelumnya
 
     try {
-        // Proses upload gambar jika ada
-        if (isset($_FILES['profil_gambar']) && $_FILES['profil_gambar']['error'] == 0) {
-            $target_dir = "../../Assets/uploads/";
-            $profil_gambar = basename($_FILES['profil_gambar']['name']);
-            move_uploaded_file($_FILES['profil_gambar']['tmp_name'], $target_dir . $profil_gambar);
+        // Foto: lewat Profil::unggahFoto() (validasi isi berkas + nama acak).
+        // Lihat catatan di add_petugas.php kenapa ini penting.
+        if (!empty($_FILES['profil_gambar']['name'])) {
+            $hasil = Profil::unggahFoto($_FILES['profil_gambar']);
+            if ($hasil['ok']) {
+                if ($profil_gambar && $profil_gambar !== $hasil['nama']) {
+                    Profil::hapusFoto($profil_gambar);
+                }
+                $profil_gambar = $hasil['nama'];
+            } else {
+                flash('danger', $hasil['pesan']);
+                header('Location: admin.php');
+                exit;
+            }
         }
 
         // Update data petugas ke database
-        $stmt = $conn->prepare("UPDATE petugas 
-                                SET nama_petugas = ?, username = ?, no_telp = ?, jenis_kelamin = ?, profil_gambar = ? 
+        $stmt = $conn->prepare("UPDATE petugas
+                                SET nama_petugas = ?, username = ?, no_telp = ?, jenis_kelamin = ?, profil_gambar = ?
                                 WHERE id_petugas = ?");
         $stmt->execute([$nama_petugas, $username, $no_telp, $jenis_kelamin, $profil_gambar, $id_petugas]);
 
-        if ($stmt) {
-            echo "<script>
-                    alert('Petugas berhasil diperbarui.');
-                    window.location.href = 'admin.php';
-                </script>";
-        }
+        flash('success', 'Petugas berhasil diperbarui.');
+        header('Location: admin.php');
+        exit;
     } catch (PDOException $e) {
-        echo "<script>
-                alert('Terjadi kesalahan: " . $e->getMessage() . "');
-            </script>";
+        flash('danger', 'Terjadi kesalahan: ' . $e->getMessage());
+        header('Location: admin.php');
+        exit;
     }
 }
+
+$e = static fn($v) => htmlspecialchars((string) $v);
 ?>
 
-<div class="container">
-    <form method="POST" action="edit_petugas.php?id_petugas=<?= $id_petugas ?>" enctype="multipart/form-data">
-        <div class="row g-3">
-            <div class="col-md-6">
-                <label for="nama_petugas" class="form-label">Nama Petugas</label>
-                <input type="text" class="form-control" id="nama_petugas" name="nama_petugas" value="<?= htmlspecialchars($petugas['nama_petugas']) ?>" required>
-            </div>
-            <div class="col-md-6">
-                <label for="username" class="form-label">Username</label>
-                <input type="text" class="form-control" id="username" name="username" value="<?= htmlspecialchars($petugas['username']) ?>" required>
-            </div>
-            <div class="col-md-6">
-                <label for="no_telp" class="form-label">No. Telepon</label>
-                <input type="text" class="form-control" id="no_telp" name="no_telp" value="<?= htmlspecialchars($petugas['no_telp']) ?>" required>
-            </div>
-            <div class="col-md-6">
-                <label class="form-label d-block">Jenis Kelamin</label>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="jenis_kelamin" id="jenis_kelamin_laki" value="Laki-Laki" <?= $petugas['jenis_kelamin'] === 'Laki-Laki' ? 'checked' : '' ?> required>
-                    <label class="form-check-label" for="jenis_kelamin_laki">Laki-Laki</label>
-                </div>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="jenis_kelamin" id="jenis_kelamin_perempuan" value="Perempuan" <?= $petugas['jenis_kelamin'] === 'Perempuan' ? 'checked' : '' ?> required>
-                    <label class="form-check-label" for="jenis_kelamin_perempuan">Perempuan</label>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <label for="profil_gambar" class="form-label">Foto Profil</label>
-                <input type="file" class="form-control" id="profil_gambar" name="profil_gambar">
-                <?php if ($petugas['profil_gambar']): ?>
-                    <img src="../../Assets/uploads/<?= $petugas['profil_gambar'] ?>" alt="Profil Gambar" class="mt-2" width="100">
-                <?php endif; ?>
-            </div>
-        </div>
-        <div class="d-flex justify-content-end mt-4">
-            <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
-        </div>
-    </form>
-</div>
+<form method="POST" action="edit_petugas.php?id_petugas=<?= urlencode((string) $id_petugas) ?>"
+      enctype="multipart/form-data" class="space-y-5" novalidate>
+
+  <div class="grid gap-4 sm:grid-cols-2">
+    <div>
+      <label for="nama_petugas" class="field-label">Nama Petugas <span class="text-rose-500">*</span></label>
+      <input type="text" class="field" id="nama_petugas" name="nama_petugas"
+             value="<?= $e($petugas['nama_petugas']) ?>" required />
+    </div>
+
+    <div>
+      <label for="username" class="field-label">Username <span class="text-rose-500">*</span></label>
+      <input type="text" class="field" id="username" name="username"
+             value="<?= $e($petugas['username']) ?>" required />
+    </div>
+
+    <div>
+      <label for="no_telp" class="field-label">No. Telepon <span class="text-rose-500">*</span></label>
+      <input type="text" inputmode="numeric" class="field" id="no_telp" name="no_telp"
+             value="<?= $e($petugas['no_telp']) ?>" required />
+    </div>
+
+    <div>
+      <span class="field-label">Jenis Kelamin <span class="text-rose-500">*</span></span>
+      <div class="mt-1 flex flex-wrap gap-5">
+        <?php foreach (['Laki-Laki' => 'jenis_kelamin_laki', 'Perempuan' => 'jenis_kelamin_perempuan'] as $value => $id): ?>
+          <label class="check-label" for="<?= $id ?>">
+            <input type="radio" class="check" name="jenis_kelamin" id="<?= $id ?>"
+                   value="<?= $value ?>" <?= $petugas['jenis_kelamin'] === $value ? 'checked' : '' ?> required />
+            <?= $value ?>
+          </label>
+        <?php endforeach; ?>
+      </div>
+    </div>
+
+    <div class="sm:col-span-2">
+      <label for="profil_gambar" class="field-label">Foto Profil</label>
+      <input type="file" class="field file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100
+                     file:px-3 file:py-1.5 file:text-xs file:font-semibold
+                     file:text-slate-700 hover:file:bg-slate-200"
+             id="profil_gambar" name="profil_gambar" accept="image/*" />
+      <?php
+      // Foto lama bisa berformat lama (Assets/uploads/<nama asli>).
+      // Kalau pola nama acak tidak cocok, urlFoto() mengembalikan null
+      // dan kita pakai inisial.
+      $fotoLamaUrl = Profil::urlFoto($petugas['profil_gambar'] ?? null, '../../');
+      $fotoLamaLokal = $petugas['profil_gambar'] ?? '';
+      $adaFotoLama = $fotoLamaUrl !== null
+          || (is_file(__DIR__ . '/../../Assets/uploads/' . basename($fotoLamaLokal)));
+      ?>
+      <?php if ($adaFotoLama): ?>
+        <?php if ($fotoLamaUrl): ?>
+          <img src="<?= $e($fotoLamaUrl) ?>" alt="Foto Profil Saat Ini"
+               class="mt-3 h-20 w-20 rounded-xl object-cover ring-1 ring-slate-200" />
+        <?php else: ?>
+          <img src="../../Assets/uploads/<?= $e(basename($fotoLamaLokal)) ?>" alt="Foto Profil Saat Ini"
+               class="mt-3 h-20 w-20 rounded-xl object-cover ring-1 ring-slate-200" />
+        <?php endif; ?>
+        <p class="field-hint">Biarkan kosong bila tidak ingin mengganti foto.</p>
+      <?php endif; ?>
+    </div>
+  </div>
+
+  <div class="flex flex-wrap items-center justify-end gap-2.5 border-t border-slate-200 pt-5">
+    <button type="reset" class="btn-secondary btn-sm">Reset</button>
+    <button type="submit" class="btn-primary btn-sm">
+      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+      </svg>
+      Simpan Perubahan
+    </button>
+  </div>
+</form>
 
 <script>
-    const noTelpInput = document.getElementById('no_telp');
-    noTelpInput.addEventListener('input', function() {
-        this.value = this.value.replace(/[^0-9]/g, ''); // Menghapus karakter selain angka
+  // No. telepon hanya boleh angka (jika form dibuka langsung, bukan via AJAX).
+  const noTelpInput = document.getElementById('no_telp');
+  if (noTelpInput) {
+    noTelpInput.addEventListener('input', function () {
+      this.value = this.value.replace(/[^0-9]/g, ''); // Menghapus karakter selain angka
     });
+  }
 </script>

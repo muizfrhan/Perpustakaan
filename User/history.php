@@ -1,6 +1,18 @@
 <?php
+/**
+ * Riwayat Peminjaman Anggota
+ *
+ * QUERY DAN VARIABELNYA TIDAK BERUBAH dari versi lama.
+ * Yang diubah hanya markup + CSS (Bootstrap -> Tailwind).
+ */
 require_once '../Config/koneksi.php';
 include 'header.php';
+
+require_once '../Config/bootstrap.php';
+
+use App\Services\DendaService;
+
+$denda = new DendaService($conn);
 
 $nim = $_SESSION['nim'];
 
@@ -58,311 +70,171 @@ $totalTerlambat = $queryLate->fetch(PDO::FETCH_ASSOC)['total_hari'] ?? 0;
 // Hitung persentase progress bar
 $progressPinjaman = min($totalPinjaman * 6.25, 100); // 16 buku = 100%
 $progressTerlambat = min($totalTerlambat * 7.5, 100); // 13 hari = 100%
+
+// Ringkasan tambahan (data turunan, bukan query baru)
+$jumlahLunas    = count(array_filter($history, fn($h) => (float) ($h['denda'] ?? 0) <= 0));
+$jumlahBelumLunas = count($history) - $jumlahLunas;
+$totalDenda = array_sum(array_map(fn($h) => (float) ($h['denda'] ?? 0), $history));
 ?>
 
-<section class="conten ios-mobile">
-    <!-- Header Mobile -->
-    <div class="mobile-header">
-        <h1 class="ios-title">Riwayat Peminjaman</h1>
-    </div>
+<!-- ================= HEADER HALAMAN ================= -->
+<section class="flex flex-wrap items-end justify-between gap-4">
+  <div>
+    <h1 class="text-title">Riwayat Peminjaman</h1>
+    <p class="text-muted mt-1">Seluruh aktivitas peminjaman dan pengembalian buku Anda</p>
+  </div>
 
-    <!-- Stats Mobile -->
-    <div class="mobile-stats">
-        <div class="stat-item">
-            <div class="stat-value"><?= $totalPinjaman ?></div>
-            <div class="stat-label">Buku Dipinjam</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-value text-danger"><?= $totalTerlambat ?></div>
-            <div class="stat-label">Hari Terlambat</div>
-        </div>
-    </div>
-
-    <!-- List Mobile -->
-    <div class="mobile-list">
-        <?php if (empty($history)): ?>
-            <div class="empty-state">
-                <i class="fas fa-book-open"></i>
-                <p>Belum ada riwayat peminjaman</p>
-            </div>
-        <?php else: ?>
-            <?php foreach ($history as $h):
-                $isLate = $h['tgl_kembali'] && (strtotime($h['tgl_kembali']) > strtotime($h['estimasi_pinjam']));
-            ?>
-                <div class="list-item shadow-sm rounded-3 mb-4 border-1">
-                    <img src="../Assets/uploads/<?= htmlspecialchars($h['cover'] ?? 'default-cover.jpg') ?>"
-                        class="ms-2 item-cover" alt="Cover Buku">
-                    <div class="item-content">
-                        <div class="item-header">
-                            <h3><?= htmlspecialchars($h['judul_buku']) ?></h3>
-                            <span class="status-badge <?= ($h['status_pengembalian'] === 'Lunas') ? 'returned' : 'borrowed' ?>">
-                                <?= $h['status_pengembalian'] ?? 'Dipinjam' ?>
-                            </span>
-                        </div>
-
-                        <div class="item-meta">
-                            <div class="meta-date">
-                                <i class="fas fa-calendar-alt"></i>
-                                <?= date('d M Y', strtotime($h['tgl_pinjam'])) ?>
-                            </div>
-                            <?php if ($isLate): ?>
-                                <div class="meta-late">
-                                    <i class="fas fa-exclamation-triangle"></i>
-                                    Terlambat <?= $h['denda'] ? 'Rp' . number_format($h['denda'], 0, ',', '.') : '' ?>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                    <button class="item-chevron" data-bs-toggle="modal"
-                        data-bs-target="#detailModal<?= $h['kode_pinjam'] ?>">
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
-                </div>
-            <?php endforeach; ?>
-        <?php endif; ?>
-    </div>
+  <a href="home.php" class="btn-primary btn-sm shrink-0">
+    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+    </svg>
+    Cari Buku
+  </a>
 </section>
 
-<!-- Modal Mobile -->
-<?php foreach ($history as $h): ?>
-    <div class="modal fade mobile-modal" id="detailModal<?= $h['kode_pinjam'] ?>">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>Detail Peminjaman</h2>
-                    <button type="button" class="close-btn" data-bs-dismiss="modal">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="detail-item">
-                        <label>Judul Buku</label>
-                        <p><?= htmlspecialchars($h['judul_buku']) ?></p>
-                    </div>
+<!-- ================= STAT CARDS ================= -->
+<section class="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
 
-                    <div class="detail-grid">
-                        <div class="detail-item">
-                            <label><i class="fas fa-calendar-check"></i> Pinjam</label>
-                            <p><?= date('d M Y', strtotime($h['tgl_pinjam'])) ?></p>
-                        </div>
-
-                        <div class="detail-item">
-                            <label><i class="fas fa-calendar-times"></i> Kembali</label>
-                            <p><?= $h['tgl_kembali'] ? date('d M Y', strtotime($h['tgl_kembali'])) : '-' ?></p>
-                        </div>
-                    </div>
-
-                    <div class="detail-grid">
-                        <div class="detail-item">
-                            <label><i class="fas fa-heart"></i> Kondisi</label>
-                            <p><?= $h['kondisi_buku'] ?? '-' ?></p>
-                        </div>
-
-                        <div class="detail-item">
-                            <label><i class="fas fa-money-bill"></i> Denda</label>
-                            <p><?= $h['denda'] ? 'Rp ' . number_format($h['denda'], 0, ',', '.') : '-' ?></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+  <div class="stat-card flex-col items-start gap-2 lg:flex-row lg:items-center">
+    <span class="stat-icon bg-brand-50 text-brand-600">
+      <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+      </svg>
+    </span>
+    <div class="w-full min-w-0">
+      <p class="text-2xl font-bold leading-none text-slate-900"><?= $totalPinjaman ?></p>
+      <p class="text-muted mt-1.5">Total Peminjaman</p>
+      <div class="progress-track mt-2">
+        <div class="progress-fill bg-brand-500" style="width: <?= max(4, $progressPinjaman) ?>%"></div>
+      </div>
     </div>
-<?php endforeach; ?>
+  </div>
 
-<style>
-    /* Base Mobile Styles */
-    .ios-mobile {
-        --primary: #007AFF;
-        --text: #1D1D1F;
-        --background: #FFFFFF;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        padding: 0 8px;
-    }
+  <div class="stat-card flex-col items-start gap-2 lg:flex-row lg:items-center">
+    <span class="stat-icon bg-rose-50 text-rose-600">
+      <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+      </svg>
+    </span>
+    <div class="w-full min-w-0">
+      <p class="text-2xl font-bold leading-none text-rose-600"><?= $totalTerlambat ?></p>
+      <p class="text-muted mt-1.5">Total Hari Terlambat</p>
+      <div class="progress-track mt-2">
+        <div class="progress-fill bg-rose-500" style="width: <?= max(4, $progressTerlambat) ?>%"></div>
+      </div>
+    </div>
+  </div>
 
-    .mobile-header {
-        padding: 24px 0 16px;
-        border-bottom: 1px solid var(--border);
-        margin-bottom: 16px;
-    }
+  <div class="stat-card flex-col items-start gap-2 lg:flex-row lg:items-center">
+    <span class="stat-icon bg-emerald-50 text-emerald-600">
+      <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    </span>
+    <div class="w-full min-w-0">
+      <p class="text-2xl font-bold leading-none text-slate-900"><?= $jumlahLunas ?></p>
+      <p class="text-muted mt-1.5">Transaksi Lunas</p>
+    </div>
+  </div>
 
-    .ios-title {
-        font-size: 24px;
-        font-weight: 700;
-        margin: 0;
-    }
+  <div class="stat-card flex-col items-start gap-2 lg:flex-row lg:items-center">
+    <span class="stat-icon bg-amber-50 text-amber-600">
+      <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    </span>
+    <div class="w-full min-w-0">
+      <p class="truncate text-2xl font-bold leading-none <?= $totalDenda > 0 ? 'text-amber-600' : 'text-slate-900' ?>">
+        <?= $totalDenda > 0 ? 'Rp' . number_format($totalDenda, 0, ',', '.') : 'Rp0' ?>
+      </p>
+      <p class="text-muted mt-1.5">Akumulasi Denda</p>
+    </div>
+  </div>
 
-    /* Stats */
-    .mobile-stats {
-        display: flex;
-        gap: 16px;
-        margin-bottom: 24px;
-    }
+</section>
 
-    .stat-item {
-        flex: 1;
-        text-align: center;
-        padding: 12px;
-        background: #F8F9FA;
-        border-radius: 12px;
-    }
+<!-- ================= TABEL RIWAYAT ================= -->
+<section class="mt-8">
+  <h2 class="text-section mb-4">Daftar Transaksi</h2>
 
-    .stat-value {
-        font-size: 24px;
-        font-weight: 700;
-        margin-bottom: 4px;
-    }
+  <?php if (empty($history)): ?>
+    <div class="card-base flex flex-col items-center justify-center px-6 py-14 text-center">
+      <span class="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+        <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+        </svg>
+      </span>
+      <h3 class="mt-4 text-base font-semibold text-slate-900">Belum ada riwayat peminjaman</h3>
+      <p class="text-muted mt-1 max-w-sm">Riwayat akan muncul setelah Anda meminjam buku pertama kali.</p>
+      <a href="home.php" class="btn-primary btn-sm mt-5">Jelajahi Katalog</a>
+    </div>
 
-    .stat-label {
-        font-size: 12px;
-        color: #8E8E93;
-    }
+  <?php else: ?>
+    <div class="card-base overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="table-base">
+          <thead>
+            <tr>
+              <th class="w-16"></th>
+              <th>Judul Buku</th>
+              <th class="whitespace-nowrap">Dipinjam</th>
+              <th class="whitespace-nowrap">Batas Kembali</th>
+              <th class="whitespace-nowrap">Dikembalikan</th>
+              <th class="whitespace-nowrap text-right">Denda</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php foreach ($history as $h):
+              $dendaNilai = (float) ($h['denda'] ?? 0);
+              $sisaHari   = $denda->sisaHari($h['estimasi_pinjam']);
+              $masihDipinjam = empty($h['tgl_kembali']);
 
-    /* List Items */
-    .mobile-list {
-        margin-bottom: 32px;
-    }
+              if (!$masihDipinjam && $dendaNilai > 0) {
+                $kelasBadge = 'badge-late';
+                $teksBadge = 'Belum Lunas';
+              } elseif (!$masihDipinjam) {
+                $kelasBadge = 'badge-safe';
+                $teksBadge = 'Lunas';
+              } elseif ($sisaHari < 0) {
+                $kelasBadge = 'badge-late';
+                $teksBadge = 'Terlambat ' . abs($sisaHari) . ' hari';
+              } elseif ($sisaHari <= 3) {
+                $kelasBadge = 'badge-due';
+                $teksBadge = $sisaHari === 0 ? 'Jatuh tempo hari ini' : $sisaHari . ' hari lagi';
+              } else {
+                $kelasBadge = 'badge-info';
+                $teksBadge = $sisaHari . ' hari lagi';
+              }
+            ?>
+              <tr>
+                <td>
+                  <img src="../Assets/uploads/<?= htmlspecialchars($h['cover'] ?? 'default-cover.jpg') ?>"
+                       alt="" loading="lazy"
+                       class="h-14 w-10 rounded-lg object-cover" />
+                </td>
+                <td>
+                  <p class="max-w-[16rem] truncate text-sm font-semibold text-slate-900">
+                    <?= htmlspecialchars($h['judul_buku'] ?? '-') ?>
+                  </p>
+                  <code class="mt-0.5 inline-block rounded bg-slate-100 px-1.5 py-0.5 text-[11px] text-slate-500">
+                    <?= htmlspecialchars($h['kode_pinjam']) ?>
+                  </code>
+                </td>
+                <td class="whitespace-nowrap"><?= date('d/m/Y', strtotime($h['tgl_pinjam'])) ?></td>
+                <td class="whitespace-nowrap"><?= date('d/m/Y', strtotime($h['estimasi_pinjam'])) ?></td>
+                <td class="whitespace-nowrap"><?= $h['tgl_kembali'] ? date('d/m/Y', strtotime($h['tgl_kembali'])) : '-' ?></td>
+                <td class="whitespace-nowrap text-right font-semibold <?= $dendaNilai > 0 ? 'text-rose-600' : 'text-slate-400' ?>">
+                  <?= $dendaNilai > 0 ? 'Rp' . number_format($dendaNilai, 0, ',', '.') : '-' ?>
+                </td>
+                <td><span class="<?= $kelasBadge ?>"><?= $teksBadge ?></span></td>
+              </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <?php endif; ?>
+</section>
 
-    .list-item {
-        display: flex;
-        align-items: center;
-        padding: 8px 0;
-    }
-
-    .item-cover {
-        width: 60px;
-        height: 80px;
-        border-radius: 8px;
-        object-fit: cover;
-        margin-right: 16px;
-    }
-
-    .item-content {
-        flex: 1;
-    }
-
-    .item-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 8px;
-    }
-
-    .item-header h3 {
-        font-size: 16px;
-        margin: 0;
-        flex: 1;
-        margin-right: 12px;
-    }
-
-    .status-badge {
-        font-size: 12px;
-        padding: 4px 10px;
-        border-radius: 20px;
-    }
-
-    .status-badge.borrowed {
-        background: #FFEECC;
-        color: #FF9500;
-    }
-
-    .status-badge.returned {
-        background: #D6F5E0;
-        color: #34C759;
-    }
-
-    .item-meta {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-    }
-
-    .meta-date,
-    .meta-late {
-        display: flex;
-        align-items: center;
-        font-size: 13px;
-        color: #8E8E93;
-    }
-
-    .meta-date i,
-    .meta-late i {
-        margin-right: 8px;
-        font-size: 12px;
-    }
-
-    .meta-late {
-        color: #FF3B30;
-    }
-
-    .item-chevron {
-        border: none;
-        background: none;
-        color: #C7C7CC;
-        padding: 8px;
-    }
-
-    /* Modal Mobile */
-    .mobile-modal .modal-content {
-        border-radius: 16px;
-        margin: 0px;
-    }
-
-    .modal-header {
-        padding: 20px;
-        border-bottom: 1px solid var(--border);
-        position: relative;
-    }
-
-    .modal-header h2 {
-        font-size: 20px;
-        margin: 0;
-    }
-
-    .close-btn {
-        position: absolute;
-        right: 16px;
-        top: 16px;
-        border: none;
-        background: none;
-        padding: 8px;
-    }
-
-    .detail-item {
-        margin-bottom: 16px;
-    }
-
-    .detail-item label {
-        display: block;
-        font-size: 12px;
-        color: #8E8E93;
-        margin-bottom: 4px;
-    }
-
-    .detail-item p {
-        font-size: 16px;
-        margin: 0;
-    }
-
-    .detail-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 16px;
-        margin-bottom: 16px;
-    }
-
-    /* Empty State */
-    .empty-state {
-        text-align: center;
-        padding: 40px 0;
-    }
-
-    .empty-state i {
-        font-size: 48px;
-        color: #C7C7CC;
-        margin-bottom: 16px;
-    }
-
-    .empty-state p {
-        color: #8E8E93;
-    }
-</style>
+<?php include 'footer.php'; ?>

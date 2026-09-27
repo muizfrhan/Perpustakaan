@@ -1,4 +1,9 @@
 <?php
-// Redirect ke halaman lain
-header("Location: Admin/Layouts/login.php");
-exit; // Menghentikan eksekusi script lebih lanjut
+/**
+ * Entry point aplikasi.
+ *
+ * Langsung ke login terpadu di /login.php. Tidak ada lagi pemilihan peran:
+ * satu form untuk owner, admin (petugas), dan anggota.
+ */
+header('Location: login.php');
+exit;

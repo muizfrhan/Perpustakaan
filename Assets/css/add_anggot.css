@@ -1,6 +1,0 @@
-
-    select {
-        max-height: 150px; /* Tinggi maksimal dropdown */
-        overflow-y: auto; /* Aktifkan scroll */
-    }
-

@@ -16,3 +16,23 @@ Thumbs.db
 # Local environment overrides
 Config/koneksi.local.php
 .env
+
+# Upload runtime.
+# Isi folder profil/ dibuat oleh user saat unggah foto, jadi bukan bagian
+# dari source. .gitkeep tetap di-commit supaya foldernya ada setelah clone -
+# App\Services\Profil butuh folder ini bisa ditulis.
+# .htaccess di dalamnya juga ditulis otomatis oleh kode.
+Assets/uploads/profil/*
+!Assets/uploads/profil/.gitkeep
+
+# Node / Tailwind build
+# node_modules sengaja tidak di-commit (ratusan MB).
+# Assets/css/pusaku.css HASIL BUILD tetap di-commit supaya deploy tidak
+# wajib menjalankan npm install.
+node_modules/
+npm-debug.log*
+package-lock.json
+
+# tailwind.config.js dan Assets/css/pusaku.src.css SENGAJA ikut di-commit:
+# keduanya adalah sumber kebenaran design system dan dibutuhkan untuk
+# `npm run build:css`.

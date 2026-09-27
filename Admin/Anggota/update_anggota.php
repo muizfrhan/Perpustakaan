@@ -1,5 +1,10 @@
 <?php
-require_once '../../Config/koneksi.php';
+require_once __DIR__ . '/../../Config/bootstrap.php';
+require_once __DIR__ . '/../../Config/koneksi.php';
+
+// Wajib login: halaman ini memuat/mengubah data perpustakaan.
+require_admin();
+
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nim = $_POST['nim'];
@@ -14,10 +19,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Validasi input
     if (empty($nim) || empty($nama) || empty($jenis_kelamin) || empty($kelas) || empty($tgl_lahir) || empty($jurusan)) {
-        echo "<script>
-                alert('Harap isi semua data.');
-                window.history.back();
-              </script>";
+        flash('danger', 'Harap isi semua data.');
+        header('Location: anggota.php');
         exit;
     }
 
@@ -38,14 +41,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 WHERE nim = ?");
         $stmt->execute([$nama, $jenis_kelamin, $kelas, $tgl_lahir, $jurusan, $status_mhs, $no_telp, $final_password, $nim]);
 
-        echo "<script>
-                alert('Data berhasil diperbarui.');
-                window.location.href = 'anggota.php'; // Redirect ke halaman anggota
-              </script>";
+        flash('success', 'Data berhasil diperbarui.');
+        header('Location: anggota.php');
+        exit;
     } catch (PDOException $e) {
-        echo "<script>
-                alert('Terjadi kesalahan: " . addslashes($e->getMessage()) . "');
-                window.history.back();
-              </script>";
+        flash('danger', 'Terjadi kesalahan: ' . $e->getMessage());
+        header('Location: anggota.php');
+        exit;
     }
 }
+

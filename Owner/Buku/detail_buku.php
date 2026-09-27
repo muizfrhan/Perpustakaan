@@ -1,65 +1,105 @@
 <?php
-// Include konfigurasi database
+/**
+ * Detail Buku (fragment AJAX - Panel Owner).
+ *
+ * Dimuat ke dalam #detailModalContent oleh buku.php.
+ * Tidak ada <html>/<body> - Traveler hanya mengambil isi respons.
+ */
 require_once '../../Config/koneksi.php';
+require_once __DIR__ . '/../../Config/bootstrap.php';
 
-// Mengambil ID buku dari query string
+// Wajib login: halaman ini memuat/mengubah data perpustakaan.
+require_owner();
+
+
 $kode_buku = isset($_GET['kode_buku']) ? $_GET['kode_buku'] : '';
 
-if (!empty($kode_buku)) {
-    // Query untuk mengambil data buku berdasarkan kode_buku
-    $query = $conn->prepare("SELECT * FROM buku WHERE kode_buku = :kode_buku");
-    $query->bindValue(':kode_buku', $kode_buku, PDO::PARAM_STR); // Gunakan PDO::PARAM_STR untuk ID string
-    $query->execute();
-
-    // Cek apakah buku ditemukan
-    if ($query->rowCount() > 0) {
-        // Ambil data buku
-        $buku = $query->fetch(PDO::FETCH_ASSOC);
-        ?>
-        <div class="container mt-3 mb-3">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                <div class="row">
-            <!-- Bagian Gambar Cover Buku -->
-            <div class="col-md-4">
-                <img src="../../Assets/uploads/<?= htmlspecialchars($buku['cover']); ?>" alt="Cover Buku" class="img-fluid rounded shadow-lg mb-4">
-                <div class="mb-3">
-                    <p><strong class="text-muted">Stok      :</strong> <?= htmlspecialchars($buku['stok']); ?></p>
-                    <p><strong class="text-muted">Status     :</strong> <?= htmlspecialchars($buku['status']); ?></p>
-                </div>
-            </div>
-            
-            <!-- Bagian Detail Buku -->
-            <div class="col-md-8">
-                <h3 class="text-primary mb-4"><?= htmlspecialchars($buku['judul_buku']); ?></h3>
-                
-                <!-- Info Buku -->
-                <div class="mb-3">
-                    <p><strong class="text-muted">Kategori      :</strong> <?= htmlspecialchars($buku['kategori']); ?></p>
-                    <p><strong class="text-muted">Pengarang     :</strong> <?= htmlspecialchars($buku['pengarang']); ?></p>
-                    <p><strong class="text-muted">Penerbit      :</strong> <?= htmlspecialchars($buku['penerbit']); ?></p>
-                    <p><strong class="text-muted">Tanggal Terbit:</strong> <?= htmlspecialchars($buku['tanggal_terbit']); ?></p>
-                    <p><strong class="text-muted">Jumlah Halaman:</strong> <?= htmlspecialchars($buku['jumlah_halaman']); ?></p>
-                    <p><strong class="text-muted">Bahasa        :</strong> <?= htmlspecialchars($buku['bahasa']); ?></p>
-                </div>
-            </div>
-            
-                <!-- Deskripsi Buku -->
-                <div class="mt-4">
-                    <h5 class="text-secondary">Deskripsi Buku:</h5>
-                    <p class="lead"><?= nl2br(htmlspecialchars($buku['deskripsi_buku'])); ?></p>
-                </div>
-                </div>
-                </div>
-            </div>
-        </div>
-
-
-        <?php
-    } else {
-        echo "<p class='text-danger'>Buku tidak ditemukan.</p>";
-    }
-} else {
-    echo "<p class='text-danger'>ID Buku tidak valid.</p>";
+if (empty($kode_buku)) {
+    echo '<div class="alert-danger" role="alert">ID Buku tidak valid.</div>';
+    return;
 }
+
+$query = $conn->prepare("SELECT * FROM buku WHERE kode_buku = :kode_buku");
+$query->bindValue(':kode_buku', $kode_buku, PDO::PARAM_STR);
+$query->execute();
+
+if ($query->rowCount() === 0) {
+    echo '<div class="alert-danger" role="alert">Buku tidak ditemukan.</div>';
+    return;
+}
+
+$buku = $query->fetch(PDO::FETCH_ASSOC);
+
+/** Peta status -> kelas badge. */
+$statusBuku = [
+    'Tersedia' => 'badge-available',
+    'Dipinjam' => 'badge-borrowed',
+    'Kosong'   => 'badge-empty',
+];
+$badgeStatus = $statusBuku[$buku['status']] ?? 'badge-neutral';
+
+/** Baris label-value. */
+$info = [
+    'Kategori'       => $buku['kategori'],
+    'Pengarang'      => $buku['pengarang'],
+    'Penerbit'       => $buku['penerbit'],
+    'Tanggal Terbit' => $buku['tanggal_terbit'],
+    'Jumlah Halaman' => $buku['jumlah_halaman'] . ' halaman',
+    'Bahasa'         => $buku['bahasa'],
+    'Stok'           => $buku['stok'] . ' eksemplar',
+];
 ?>
+
+<div class="flex flex-col gap-6 sm:flex-row">
+
+  <!-- Cover -->
+  <div class="w-full shrink-0 sm:w-44">
+    <?php if (!empty($buku['cover'])): ?>
+      <img src="../../Assets/uploads/<?= htmlspecialchars($buku['cover']); ?>"
+           alt="Cover <?= htmlspecialchars($buku['judul_buku']); ?>"
+           class="w-full rounded-2xl border border-slate-200 object-cover shadow-card" />
+    <?php else: ?>
+      <div class="flex aspect-[3/4] w-full flex-col items-center justify-center gap-2
+                  rounded-2xl border border-dashed border-slate-300 bg-slate-50 text-slate-400">
+        <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+        </svg>
+        <span class="text-xs font-medium">Tanpa cover</span>
+      </div>
+    <?php endif; ?>
+
+    <div class="mt-3 flex justify-center">
+      <span class="<?= $badgeStatus ?>"><?= htmlspecialchars((string) $buku['status']); ?></span>
+    </div>
+  </div>
+
+  <!-- Informasi -->
+  <div class="min-w-0 flex-1">
+    <code class="code-chip"><?= htmlspecialchars((string) $buku['kode_buku']); ?></code>
+    <h3 class="mt-2 text-xl font-bold leading-snug tracking-tight text-slate-900">
+      <?= htmlspecialchars($buku['judul_buku']); ?>
+    </h3>
+
+    <dl class="mt-4">
+      <?php foreach ($info as $label => $value): ?>
+        <div class="dl-row">
+          <dt class="dl-term"><?= htmlspecialchars((string) $label); ?></dt>
+          <dd class="dl-desc text-right"><?= htmlspecialchars((string) ($value !== '' ? $value : '-')); ?></dd>
+        </div>
+      <?php endforeach; ?>
+    </dl>
+  </div>
+</div>
+
+<!-- Deskripsi -->
+<div class="mt-6 border-t border-slate-200 pt-5">
+  <h4 class="text-label">Deskripsi Buku</h4>
+  <?php if (trim((string) $buku['deskripsi_buku']) !== ''): ?>
+    <p class="mt-2 whitespace-pre-line text-sm leading-relaxed text-slate-700">
+      <?= htmlspecialchars((string) $buku['deskripsi_buku']); ?>
+    </p>
+  <?php else: ?>
+    <p class="mt-2 text-sm italic text-slate-400">Belum ada deskripsi untuk buku ini.</p>
+  <?php endif; ?>
+</div>
