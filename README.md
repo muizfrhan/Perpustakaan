@@ -166,12 +166,14 @@ Perpustakaan/
 │   ├── img/                  # Logo & ilustrasi
 │   ├── uploads/              # Cover buku & foto profil (runtime)
 │   └── Anime Date/           # Ilustrasi kalender dashboard
-├── Database/                 # Skrip SQL (pusaku.sql, migration_*.sql)
 ├── Cron/reminder.php         # Cron: pengingat keterlambatan
-├── tests/                    # DendaServiceTest, AuthFlowTest
+├── tests/                    # DendaServiceTest, AuthFlowTest, ProfilTest
 ├── tailwind.config.js
 └── package.json
 ```
+
+> **Catatan:** folder `Database/` (skrip SQL schema & migrasi) sengaja tidak
+> disertakan. Siapkan database sendiri, lalu sesuaikan `Config/koneksi.php`.
 
 > Catatan: `Admin/Layouts/login.php`, `Owner/Layouts/login.php`, dan
 > `User/login.php` kini hanya redirect ke `/login.php` (diposalkan).
